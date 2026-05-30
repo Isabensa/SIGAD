@@ -58,6 +58,17 @@ const actionButtonStyles = {
   boxShadow: '0 18px 32px rgba(143, 76, 255, 0.22)'
 };
 
+const secondaryButtonStyles = {
+  border: '1px solid rgba(255,255,255,0.14)',
+  borderRadius: '16px',
+  padding: '10px 16px',
+  background: 'rgba(255,255,255,0.05)',
+  color: '#c7d0ff',
+  fontWeight: 600,
+  cursor: 'pointer',
+  boxShadow: 'none'
+};
+
 const inputStyles = {
   width: '100%',
   maxWidth: '520px',
@@ -117,12 +128,23 @@ const controlsStyles = {
   gap: '10px'
 };
 
-function Dashboard({ pb }) {
+function Dashboard({ pb, logout }) {
   const [showCourseInput, setShowCourseInput] = useState(false);
   const [courseName, setCourseName] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [escuela, setEscuela] = useState('');
+  const [anio, setAnio] = useState('');
+  const [diasClase, setDiasClase] = useState('');
   const [courses, setCourses] = useState([]);
 
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    if (logout) {
+      logout();
+    }
+    navigate('/login');
+  };
 
   const handleCreateCourse = () => {
     setShowCourseInput(true);
@@ -130,6 +152,12 @@ function Dashboard({ pb }) {
 
   const fetchCourses = async () => {
     try {
+      // ensure we only fetch when auth is valid
+      if (!pb?.authStore?.isValid) {
+        console.log('fetchCourses: auth not valid, skipping');
+        return;
+      }
+
       const coursesList = await getCourses(pb);
       setCourses(coursesList);
       console.log('cursos obtenidos', coursesList);
@@ -139,35 +167,75 @@ function Dashboard({ pb }) {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const loadCourses = async () => {
-      await fetchCourses();
+      if (!mounted) return;
+      try {
+        if (!pb?.authStore?.isValid) {
+          console.log('Dashboard mounted but auth not valid - skipping initial fetch');
+          return;
+        }
+
+        const coursesList = await getCourses(pb);
+        if (!mounted) return;
+        setCourses(coursesList);
+        console.log('cursos obtenidos', coursesList);
+      } catch (e) {
+        console.log('loadCourses error', e);
+      }
     };
 
     loadCourses();
-  }, []);
+
+    return () => {
+      mounted = false;
+    };
+  }, [pb]);
 
   const saveCourse = async () => {
     console.log('CLICK EN GUARDAR');
 
-    if (!courseName.trim()) {
-      console.log('nombre vacío');
+    // Validar campos obligatorios
+    if (!courseName.trim() || !escuela.trim() || !anio.toString().trim()) {
+      console.log('Por favor complete los campos: nombre, escuela y anio');
       return;
     }
 
+    // Validar que el usuario esté autenticado
+    if (!pb?.authStore?.model?.id) {
+      console.error('Error: Usuario no autenticado. docenteId no disponible');
+      return;
+    }
+
+    const payload = {
+      nombre: courseName.trim(),
+      descripcion: descripcion.trim(),
+      escuela: escuela.trim(),
+      anio: anio.toString().trim(),
+      diasclase: diasClase.trim(),
+      docenteId: pb.authStore.model.id
+    };
+
+    console.log('📤 Payload a enviar:', payload);
+    console.log('🔐 docenteId:', pb.authStore.model.id);
+
     try {
-      const result = await createCourse(pb, {
-        nombre: courseName,
-        descripcion: ''
-      });
+      const result = await createCourse(pb, payload);
+      console.log('✅ curso guardado', result);
 
-      console.log('curso guardado', result);
-
+      // limpiar formulario
       setCourseName('');
+      setDescripcion('');
+      setEscuela('');
+      setAnio('');
+      setDiasClase('');
       setShowCourseInput(false);
 
-      fetchCourses();
+      await fetchCourses();
     } catch (error) {
-      console.log('error al guardar curso', error);
+      console.error('❌ error al guardar curso:', error);
+      console.error('Detalles del error:', error.response?.data || error.message);
     }
   };
 
@@ -207,24 +275,68 @@ function Dashboard({ pb }) {
             <h1 style={titleStyles}>Dashboard SIGAD</h1>
             <p style={subtitleStyles}>Bienvenido docente, gestiona tus cursos con una interfaz moderna.</p>
           </div>
-          <button style={actionButtonStyles} type="button" onClick={handleCreateCourse}>
-            Crear curso
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button style={{ ...secondaryButtonStyles, border: '1px solid rgba(255,255,255,0.18)', color: '#ffffff' }} type="button" onClick={handleLogout}>
+              Salir del sistema
+            </button>
+            <button style={actionButtonStyles} type="button" onClick={handleCreateCourse}>
+              Crear curso
+            </button>
+          </div>
         </div>
 
         {showCourseInput && (
           <section style={sectionCardStyles}>
-            <div style={rowStyles}>
-              <input
-                type="text"
-                placeholder="Nombre del curso"
-                value={courseName}
-                onChange={(event) => setCourseName(event.target.value)}
-                style={inputStyles}
-              />
-              <button style={actionButtonStyles} type="button" onClick={saveCourse}>
-                Guardar curso
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Nombre del curso"
+                  value={courseName}
+                  onChange={(event) => setCourseName(event.target.value)}
+                  style={{ ...inputStyles, flex: '1 1 320px' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Escuela"
+                  value={escuela}
+                  onChange={(event) => setEscuela(event.target.value)}
+                  style={{ ...inputStyles, flex: '1 1 240px' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Año"
+                  value={anio}
+                  onChange={(event) => setAnio(event.target.value)}
+                  style={{ ...inputStyles, width: '120px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+                <textarea
+                  placeholder="Descripción (opcional)"
+                  value={descripcion}
+                  onChange={(event) => setDescripcion(event.target.value)}
+                  style={{ ...inputStyles, minHeight: '84px', resize: 'vertical' }}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Días de clase (ej: martes,jueves)"
+                  value={diasClase}
+                  onChange={(event) => setDiasClase(event.target.value)}
+                  style={inputStyles}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button style={{ ...actionButtonStyles, background: 'rgba(255,255,255,0.06)', color: '#d7dcff', boxShadow: 'none', fontWeight:600 }} type="button" onClick={() => setShowCourseInput(false)}>
+                  Cancelar
+                </button>
+                <button style={actionButtonStyles} type="button" onClick={saveCourse}>
+                  Guardar curso
+                </button>
+              </div>
             </div>
           </section>
         )}
@@ -238,25 +350,27 @@ function Dashboard({ pb }) {
             <span style={{ color: '#d7dcff', fontSize: '0.95rem', minWidth: 'fit-content' }}>{courses.length} curso{courses.length === 1 ? '' : 's'} activos</span>
           </div>
 
-          {courses.length === 0 ? (
-            <p style={{ marginTop: '20px', color: '#d7dcff' }}>No hay cursos aún.</p>
-          ) : (
-            <ul style={listStyles}>
-              {courses.map((course) => (
-                <li key={course.id} className="dashboard-course-item" style={itemStyles}>
-                  <span style={itemTitleStyles}>{course.nombre}</span>
-                  <div style={controlsStyles}>
-                    <button style={actionButtonStyles} type="button" onClick={() => navigate(`/curso/${course.id}`)}>
-                      Entrar
-                    </button>
-                    <button style={actionButtonStyles} type="button" onClick={() => handleDeleteCourse(course.id)}>
-                      Eliminar
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div style={{ marginTop: '20px' }}>
+            {courses.length === 0 ? (
+              <p style={{ color: '#d7dcff' }}>No hay cursos aún.</p>
+            ) : (
+              <ul style={listStyles}>
+                {courses.map((course) => (
+                  <li key={course.id} className="dashboard-course-item" style={itemStyles}>
+                    <span style={itemTitleStyles}>{course.nombre}</span>
+                    <div style={controlsStyles}>
+                      <button style={actionButtonStyles} type="button" onClick={() => navigate(`/curso/${course.id}`)}>
+                        Entrar
+                      </button>
+                      <button style={actionButtonStyles} type="button" onClick={() => handleDeleteCourse(course.id)}>
+                        Eliminar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
       </div>
     </main>

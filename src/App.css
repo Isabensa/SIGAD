@@ -61,7 +61,7 @@
   padding: 12px 16px;
 }
 
-..login-form button:hover {
+.login-form button:hover {
   filter: brightness(0.95);
 }
 

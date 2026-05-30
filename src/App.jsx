@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 import './App.css';
 import Landing from './components/Landing';
@@ -96,10 +96,10 @@ const subtitleStyles = {
   lineHeight: 1.6,
 };
 
-function App() {
+function LoginPage({ pb, onAuthSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -107,70 +107,82 @@ function App() {
     try {
       await pb.collection('users').authWithPassword(email, password);
       console.log('login correcto');
-      setIsLoggedIn(true);
+      onAuthSuccess();
+      navigate('/dashboard');
     } catch {
       console.log('error de login');
     }
   };
 
   return (
+    <main style={pageStyles}>
+      <section style={cardStyles}>
+        <header>
+          <h1 style={headingStyles}>SIGAD</h1>
+          <p style={subtitleStyles}>Gestión Académica de Próxima Generación</p>
+        </header>
+
+        <form onSubmit={handleSubmit} style={formStyles}>
+          <div style={fieldStyles}>
+            <label htmlFor="email" style={labelStyles}>
+              Correo electrónico
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              style={inputStyles}
+            />
+          </div>
+
+          <div style={fieldStyles}>
+            <label htmlFor="password" style={labelStyles}>
+              Contraseña
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              style={inputStyles}
+            />
+          </div>
+
+          <button type="submit" style={buttonStyles}>
+            Ingresar
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(pb.authStore.isValid);
+
+  const logout = () => {
+    pb.authStore.clear();
+    setIsLoggedIn(false);
+  };
+
+  return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<LoginPage pb={pb} onAuthSuccess={() => setIsLoggedIn(true)} />} />
         <Route
-          path="/login"
-          element={
-            isLoggedIn ? (
-              <Dashboard pb={pb} />
-            ) : (
-              <main style={pageStyles}>
-                <section style={cardStyles}>
-                  <header>
-                    <h1 style={headingStyles}>SIGAD</h1>
-                    <p style={subtitleStyles}>Gestión Académica de Próxima Generación</p>
-                  </header>
-
-                  <form onSubmit={handleSubmit} style={formStyles}>
-                    <div style={fieldStyles}>
-                      <label htmlFor="email" style={labelStyles}>
-                        Correo electrónico
-                      </label>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        style={inputStyles}
-                      />
-                    </div>
-
-                    <div style={fieldStyles}>
-                      <label htmlFor="password" style={labelStyles}>
-                        Contraseña
-                      </label>
-                      <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        style={inputStyles}
-                      />
-                    </div>
-
-                    <button type="submit" style={buttonStyles}>
-                      Ingresar
-                    </button>
-                  </form>
-                </section>
-              </main>
-            )
-          }
+          path="/dashboard"
+          element={isLoggedIn ? <Dashboard pb={pb} logout={logout} /> : <Navigate replace to="/login" />}
         />
-        <Route path="/curso/:id" element={<CourseDetail />} />
+        <Route
+          path="/curso/:id"
+          element={isLoggedIn ? <CourseDetail logout={logout} /> : <Navigate replace to="/login" />}
+        />
       </Routes>
     </BrowserRouter>
   );
