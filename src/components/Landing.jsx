@@ -209,14 +209,20 @@ function Landing() {
             </Link>
           </div>
 
-          <div style={heroCardStyles}>
-            <div style={heroImageStyles}>
-              <div>
-                Imagen de referencia
-                <div style={{ marginTop: '14px', color: '#c5c8f2', fontSize: '0.9rem' }}>Panel intuitivo para docentes</div>
-              </div>
-            </div>
-          </div>
+        <div style={heroCardStyles}>
+          <img
+            src="/images/sigad-hero.png"
+            alt="Sistema SIGAD en una computadora futurista"
+            style={{
+              width: '100%',
+              minHeight: '320px',
+              borderRadius: '24px',
+              objectFit: 'cover',
+              display: 'block',
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)'
+            }}
+          />
+        </div>
         </section>
 
         <section>

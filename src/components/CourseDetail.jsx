@@ -7,6 +7,7 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 const pageStyles = {
   minHeight: '100vh',
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   padding: '24px',
@@ -25,6 +26,17 @@ const cardStyles = {
   display: 'flex',
   flexDirection: 'column',
   gap: '24px'
+};
+
+const topActionsWrapperStyles = {
+  width: '100%',
+  maxWidth: '1100px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: '12px',
+  flexWrap: 'wrap',
+  marginBottom: '18px'
 };
 
 const headerStyles = {
@@ -278,46 +290,41 @@ function CourseDetail({ logout }) {
 
   return (
     <main style={pageStyles}>
+      <div style={topActionsWrapperStyles}>
+        <button className="topActionButton" type="button" onClick={() => navigate('/dashboard')}>
+          Volver
+        </button>
+        <button className="topActionButton topActionButtonSecondary" type="button" onClick={handleLogout}>
+          Salir del sistema
+        </button>
+      </div>
       <div style={cardStyles}>
         {course ? (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                style={secondaryButtonStyles}
-                type="button"
-                onClick={() => navigate('/dashboard')}
-              >
-                Volver
-              </button>
-              <button
-                style={{ ...secondaryButtonStyles, border: '1px solid rgba(255,255,255,0.18)', color: '#ffffff' }}
-                type="button"
-                onClick={handleLogout}
-              >
-                Salir del sistema
-              </button>
-            </div>
-
             <div style={{ padding: '24px', borderRadius: '20px', background: 'rgba(15, 18, 33, 0.96)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <header style={{ marginBottom: '20px' }}>
-                <h1 style={{ ...titleStyles, fontSize: '1.6rem', marginBottom: '8px' }}>Detalle del curso</h1>
-                <p style={subtitleStyles}>Revisa y edita los datos del curso.</p>
+              <header style={{ marginBottom: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                <div>
+                  <h1 style={{ ...titleStyles, fontSize: '1.6rem', marginBottom: '8px' }}>Detalle del curso</h1>
+                  <p style={subtitleStyles}>Revisa y edita los datos del curso.</p>
+                </div>
+                {!editMode && (
+                  <button style={{ ...buttonStyles, padding: '10px 22px', fontSize: '0.95rem', whiteSpace: 'nowrap' }} type="button" onClick={() => setEditMode(true)}>
+                    Editar curso
+                  </button>
+                )}
               </header>
 
               {!editMode ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(255, 182, 193, 0.08)', border: '1px solid rgba(255, 182, 193, 0.14)' }}>
-                    <p style={{ ...labelStyles, marginBottom: '8px', color: '#d7dcff' }}>Nombre del curso</p>
-                    <p style={{ ...infoTextStyles, fontSize: '1.2rem', fontWeight: 700, color: '#eef0ff', margin: 0 }}>{course.nombre}</p>
+                <div style={{ display: 'grid', gap: '20px' }}>
+                  <div style={{ padding: '20px 22px', borderRadius: '18px', background: 'rgba(255, 182, 193, 0.08)', border: '1px solid rgba(255, 182, 193, 0.18)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Nombre del curso</p>
+                      <p style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#eef0ff', lineHeight: 1.2 }}>{course.nombre}</p>
+                    </div>
                   </div>
-                  <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(255, 182, 193, 0.06)', border: '1px solid rgba(255, 182, 193, 0.12)' }}>
-                    <p style={{ ...labelStyles, marginBottom: '8px', color: '#d7dcff' }}>Descripción del curso</p>
-                    <p style={{ ...infoTextStyles, margin: 0 }}>{course.descripcion || 'Sin descripción'}</p>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                    <button style={{ ...buttonStyles, padding: '10px 20px', fontSize: '0.95rem' }} type="button" onClick={() => setEditMode(true)}>
-                      Editar curso
-                    </button>
+                  <div style={{ padding: '20px 22px', borderRadius: '18px', background: 'rgba(255, 182, 193, 0.06)', border: '1px solid rgba(255, 182, 193, 0.12)' }}>
+                    <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Descripción del curso</p>
+                    <p style={{ margin: 0, color: '#e8ebff', fontSize: '1rem', lineHeight: 1.7 }}>{course.descripcion || 'Sin descripción'}</p>
                   </div>
                 </div>
               ) : (
@@ -352,12 +359,12 @@ function CourseDetail({ logout }) {
             </div>
 
             <div style={{ padding: '24px', borderRadius: '20px', background: 'rgba(15, 18, 33, 0.96)', border: '1px solid rgba(255, 182, 193, 0.12)' }}>
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              <div>
                 <h2 style={{ margin: 0, fontSize: '1.3rem', color: '#eef0ff', marginBottom: '8px' }}>Gestión de alumnos</h2>
                 <p style={{ ...subtitleStyles, margin: 0 }}>Administra los alumnos registrados en el curso.</p>
               </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
                   style={buttonStyles}
                   type="button"
@@ -366,13 +373,14 @@ function CourseDetail({ logout }) {
                   {showAlumnoForm ? 'Cerrar formulario' : 'Agregar alumno'}
                 </button>
                 <button
-                  style={secondaryButtonStyles}
+                  style={buttonStyles}
                   type="button"
                   onClick={() => console.log('Ver asistencia del curso', id)}
                 >
                   Ver asistencia
                 </button>
               </div>
+            </div>
 
               {showAlumnoForm && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px', marginBottom: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -527,22 +535,6 @@ function CourseDetail({ logout }) {
           </>
         ) : (
           <div style={{ padding: '24px', borderRadius: '20px', background: 'rgba(15, 18, 33, 0.96)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                style={secondaryButtonStyles}
-                type="button"
-                onClick={() => navigate('/dashboard')}
-              >
-                Volver
-              </button>
-              <button
-                style={{ ...secondaryButtonStyles, border: '1px solid rgba(255,255,255,0.18)', color: '#ffffff' }}
-                type="button"
-                onClick={handleLogout}
-              >
-                Salir del sistema
-              </button>
-            </div>
             <p style={{ ...infoTextStyles, marginTop: '16px' }}>No se encontró el curso.</p>
           </div>
         )}

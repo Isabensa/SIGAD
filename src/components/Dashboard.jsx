@@ -6,6 +6,7 @@ import { getCourses, createCourse, deleteCourse } from '../services/courseServic
 const pageStyles = {
   minHeight: '100vh',
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   padding: '24px',
@@ -46,6 +47,17 @@ const rowStyles = {
   gap: '16px'
 };
 
+const topActionsWrapperStyles = {
+  width: '100%',
+  maxWidth: '960px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: '12px',
+  flexWrap: 'wrap',
+  marginBottom: '18px'
+};
+
 const actionButtonStyles = {
   border: 'none',
   borderRadius: '18px',
@@ -56,17 +68,6 @@ const actionButtonStyles = {
   cursor: 'pointer',
   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   boxShadow: '0 18px 32px rgba(143, 76, 255, 0.22)'
-};
-
-const secondaryButtonStyles = {
-  border: '1px solid rgba(255,255,255,0.14)',
-  borderRadius: '16px',
-  padding: '10px 16px',
-  background: 'rgba(255,255,255,0.05)',
-  color: '#c7d0ff',
-  fontWeight: 600,
-  cursor: 'pointer',
-  boxShadow: 'none'
 };
 
 const inputStyles = {
@@ -144,6 +145,10 @@ function Dashboard({ pb, logout }) {
       logout();
     }
     navigate('/login');
+  };
+
+  const handleGoBack = () => {
+    navigate('/');
   };
 
   const handleCreateCourse = () => {
@@ -269,6 +274,14 @@ function Dashboard({ pb, logout }) {
 
   return (
     <main style={pageStyles}>
+      <div style={topActionsWrapperStyles}>
+        <button className="topActionButton" type="button" onClick={handleGoBack}>
+          Volver
+        </button>
+        <button className="topActionButton topActionButtonSecondary" type="button" onClick={handleLogout}>
+          Salir del sistema
+        </button>
+      </div>
       <div style={panelStyles}>
         <div style={rowStyles}>
           <div>
@@ -276,9 +289,6 @@ function Dashboard({ pb, logout }) {
             <p style={subtitleStyles}>Bienvenido docente, gestiona tus cursos con una interfaz moderna.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <button style={{ ...secondaryButtonStyles, border: '1px solid rgba(255,255,255,0.18)', color: '#ffffff' }} type="button" onClick={handleLogout}>
-              Salir del sistema
-            </button>
             <button style={actionButtonStyles} type="button" onClick={handleCreateCourse}>
               Crear curso
             </button>
