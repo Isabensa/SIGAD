@@ -209,20 +209,17 @@ function Landing() {
             </Link>
           </div>
 
-        <div style={heroCardStyles}>
-          <img
-            src="/images/sigad-hero.png"
-            alt="Sistema SIGAD en una computadora futurista"
-            style={{
-              width: '100%',
-              minHeight: '320px',
-              borderRadius: '24px',
-              objectFit: 'cover',
-              display: 'block',
-              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)'
-            }}
-          />
-        </div>
+          <div style={heroCardStyles}>
+            <img
+              src="/images/sigad-hero.png"
+              alt="Sistema SIGAD en una computadora futurista"
+              style={{
+                ...heroImageStyles,
+                objectFit: 'cover',
+                display: 'block'
+              }}
+            />
+          </div>
         </section>
 
         <section>

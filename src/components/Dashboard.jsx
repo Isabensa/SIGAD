@@ -135,7 +135,7 @@ function Dashboard({ pb, logout }) {
   const [descripcion, setDescripcion] = useState('');
   const [escuela, setEscuela] = useState('');
   const [anio, setAnio] = useState('');
-  const [diasClase, setDiasClase] = useState('');
+  const [diasClase, setDiasClase] = useState([]);
   const [courses, setCourses] = useState([]);
 
   const navigate = useNavigate();
@@ -218,7 +218,7 @@ function Dashboard({ pb, logout }) {
       descripcion: descripcion.trim(),
       escuela: escuela.trim(),
       anio: anio.toString().trim(),
-      diasclase: diasClase.trim(),
+      diasClase: diasClase,
       docenteId: pb.authStore.model.id
     };
 
@@ -234,7 +234,7 @@ function Dashboard({ pb, logout }) {
       setDescripcion('');
       setEscuela('');
       setAnio('');
-      setDiasClase('');
+      setDiasClase([]);
       setShowCourseInput(false);
 
       await fetchCourses();
@@ -329,14 +329,39 @@ function Dashboard({ pb, logout }) {
                   onChange={(event) => setDescripcion(event.target.value)}
                   style={{ ...inputStyles, minHeight: '84px', resize: 'vertical' }}
                 />
-
-                <input
-                  type="text"
-                  placeholder="Días de clase (ej: martes,jueves)"
-                  value={diasClase}
-                  onChange={(event) => setDiasClase(event.target.value)}
-                  style={inputStyles}
-                />
+                <div>
+                  <p style={{ margin: '0 0 12px', color: '#d7dcff', fontSize: '0.95rem', fontWeight: 600 }}>Días de clase</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'].map((dia) => (
+                      <button
+                        key={dia}
+                        type="button"
+                        onClick={() => setDiasClase((prev) =>
+                          prev.includes(dia)
+                            ? prev.filter((item) => item !== dia)
+                            : [...prev, dia]
+                        )}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '12px',
+                          border: diasClase.includes(dia)
+                            ? '2px solid #8d6bff'
+                            : '1px solid rgba(255,255,255,0.2)',
+                          background: diasClase.includes(dia)
+                            ? 'rgba(141, 107, 255, 0.25)'
+                            : 'rgba(255,255,255,0.05)',
+                          color: diasClase.includes(dia) ? '#eef0ff' : '#9da3bf',
+                          fontWeight: diasClase.includes(dia) ? 600 : 400,
+                          cursor: 'pointer',
+                          textTransform: 'capitalize',
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        {dia}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>

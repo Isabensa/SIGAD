@@ -5,6 +5,7 @@ import './App.css';
 import Landing from './components/Landing';
 import Dashboard from './components/Dashboard';
 import CourseDetail from './components/CourseDetail';
+import AttendanceSheet from './components/AttendanceSheet';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -182,6 +183,10 @@ function App() {
         <Route
           path="/curso/:id"
           element={isLoggedIn ? <CourseDetail logout={logout} /> : <Navigate replace to="/login" />}
+        />
+        <Route
+          path="/curso/:id/asistencia"
+          element={isLoggedIn ? <AttendanceSheet logout={logout} /> : <Navigate replace to="/login" />}
         />
       </Routes>
     </BrowserRouter>

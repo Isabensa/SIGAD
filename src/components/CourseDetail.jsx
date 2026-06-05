@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 
@@ -39,12 +39,6 @@ const topActionsWrapperStyles = {
   marginBottom: '18px'
 };
 
-const headerStyles = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '6px'
-};
-
 const titleStyles = {
   margin: 0,
   fontSize: '2rem',
@@ -79,13 +73,6 @@ const secondaryButtonStyles = {
   boxShadow: 'none'
 };
 
-const rowActionsStyles = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '12px',
-  justifyContent: 'flex-start'
-};
-
 const inputStyles = {
   width: '100%',
   padding: '14px 16px',
@@ -112,6 +99,18 @@ const infoTextStyles = {
   lineHeight: 1.75
 };
 
+const normalizeDiasClase = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return value.split(',').map((dia) => dia.trim()).filter(Boolean);
+  }
+
+  return [];
+};
+
 function CourseDetail({ logout }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -128,6 +127,7 @@ function CourseDetail({ logout }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [editingAlumnoId, setEditingAlumnoId] = useState(null);
   const [editFormData, setEditFormData] = useState({ nombre: '', dni: '', email: '' });
+  const [diasClase, setDiasClase] = useState([]);
 
   const ITEMS_PER_PAGE = 7;
   const handleLogout = () => {
@@ -136,17 +136,20 @@ function CourseDetail({ logout }) {
     }
     navigate('/login');
   };
+  const fetchAlumnos = useCallback(async () => {
+    if (!pb?.authStore?.isValid) {
+      return [];
+    }
+
+    return await pb.collection('alumnos').getFullList({
+      filter: `cursoId = "${id}"`,
+      requestKey: null
+    });
+  }, [id]);
+
   const loadAlumnos = async () => {
     try {
-      if (!pb?.authStore?.isValid) {
-        return;
-      }
-
-      const alumnosList = await pb.collection('alumnos').getFullList({
-        filter: `cursoId = "${id}"`,
-        requestKey: null
-      });
-
+      const alumnosList = await fetchAlumnos();
       setAlumnos(alumnosList);
     } catch (error) {
       console.log('error al cargar alumnos', error);
@@ -156,7 +159,7 @@ function CourseDetail({ logout }) {
   useEffect(() => {
     let mounted = true;
 
-    const loadCourse = async () => {
+    const loadData = async () => {
       try {
         if (!pb?.authStore?.isValid) {
           console.log('CourseDetail: auth not valid, skipping fetch');
@@ -164,28 +167,33 @@ function CourseDetail({ logout }) {
           return;
         }
 
-        // include requestKey:null to avoid auto-cancellation by SDK
-        const courseData = await pb.collection('cursos').getOne(id, { expand: '', requestKey: null });
+        const [courseData, alumnosList] = await Promise.all([
+          pb.collection('cursos').getOne(id, { expand: '', requestKey: null }),
+          fetchAlumnos()
+        ]);
+
         if (!mounted) return;
+
         setCourse(courseData);
         setName(courseData?.nombre || '');
         setDescription(courseData?.descripcion || '');
+        setDiasClase(normalizeDiasClase(courseData?.diasClase));
+        setAlumnos(alumnosList);
       } catch (error) {
-        console.log('error al cargar curso', error);
+        console.log('error al cargar datos del curso', error);
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
     if (id) {
-      loadCourse();
-      loadAlumnos();
+      loadData();
     }
 
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, fetchAlumnos]);
 
   const createAlumno = async () => {
     if (!alumnoNombre.trim() || !alumnoDni.trim()) {
@@ -279,7 +287,8 @@ function CourseDetail({ logout }) {
     try {
       const updatedCourse = await pb.collection('cursos').update(id, {
         nombre: name,
-        descripcion: description
+        descripcion: description,
+        diasClase: diasClase
       }, { requestKey: null });
       setCourse(updatedCourse);
       setEditMode(false);
@@ -287,6 +296,16 @@ function CourseDetail({ logout }) {
       console.log('error al guardar cambios', error);
     }
   };
+
+  const toggleDiaClase = (dia) => {
+    setDiasClase((prev) =>
+      prev.includes(dia)
+        ? prev.filter((item) => item !== dia)
+        : [...prev, dia]
+    );
+  };
+
+  const diasDisponibles = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
   return (
     <main style={pageStyles}>
@@ -326,6 +345,14 @@ function CourseDetail({ logout }) {
                     <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Descripción del curso</p>
                     <p style={{ margin: 0, color: '#e8ebff', fontSize: '1rem', lineHeight: 1.7 }}>{course.descripcion || 'Sin descripción'}</p>
                   </div>
+                  <div style={{ padding: '20px 22px', borderRadius: '18px', background: 'rgba(255, 182, 193, 0.06)', border: '1px solid rgba(255, 182, 193, 0.12)' }}>
+                    <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Días de clase</p>
+                    <p style={{ margin: 0, color: '#e8ebff', fontSize: '1rem', lineHeight: 1.7 }}>
+                      {normalizeDiasClase(course?.diasClase).length > 0
+                        ? normalizeDiasClase(course?.diasClase).join(', ')
+                        : 'No configurados'}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -351,6 +378,36 @@ function CourseDetail({ logout }) {
                       }}
                     />
                   </label>
+                  <div>
+                    <p style={{ margin: '0 0 12px', color: '#d7dcff', fontSize: '0.95rem', fontWeight: 600 }}>Días de clase</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      {diasDisponibles.map((dia) => (
+                        <button
+                          key={dia}
+                          type="button"
+                          onClick={() => toggleDiaClase(dia)}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '12px',
+                            border: diasClase.includes(dia)
+                              ? '2px solid #8d6bff'
+                              : '1px solid rgba(255,255,255,0.2)',
+                            background: diasClase.includes(dia)
+                              ? 'rgba(141, 107, 255, 0.25)'
+                              : 'rgba(255,255,255,0.05)',
+                            color: diasClase.includes(dia) ? '#eef0ff' : '#9da3bf',
+                            fontWeight: diasClase.includes(dia) ? 600 : 400,
+                            cursor: 'pointer',
+                            textTransform: 'capitalize',
+                            fontSize: '0.9rem',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {dia}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <button style={buttonStyles} type="button" onClick={handleSave}>
                     Guardar cambios
                   </button>
@@ -375,7 +432,7 @@ function CourseDetail({ logout }) {
                 <button
                   style={buttonStyles}
                   type="button"
-                  onClick={() => console.log('Ver asistencia del curso', id)}
+                  onClick={() => navigate(`/curso/${id}/asistencia`)}
                 >
                   Ver asistencia
                 </button>
