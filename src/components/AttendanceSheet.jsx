@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -290,6 +292,101 @@ function AttendanceSheet({ logout }) {
       ? ((p + t * 0.5) / totalClases * 100).toFixed(1)
       : 0;
     return { p, a, t, porcentaje };
+  };
+
+  const exportarPDF = () => {
+    try {
+      const doc = new jsPDF('landscape');
+      let yPosition = 15;
+
+      doc.setFontSize(18);
+      doc.text('SIGAD - Planilla de asistencia', 15, yPosition);
+      yPosition += 12;
+
+      doc.setFontSize(11);
+      doc.text(`Curso: ${course.nombre}`, 15, yPosition);
+      yPosition += 6;
+      doc.text(`Mes: ${mesSeleccionado}`, 15, yPosition);
+      yPosition += 6;
+      doc.text(`Días de clase: ${diasClase.join(', ')}`, 15, yPosition);
+      yPosition += 6;
+      doc.text(`Total de clases del mes: ${fechasDelMes.length}`, 15, yPosition);
+      yPosition += 10;
+
+      const asistenciaData = alumnos.map((alumno, index) => {
+        const row = [
+          index + 1,
+          alumno.nombre,
+          alumno.dni || '-'
+        ];
+
+        fechasDelMes.forEach((fecha) => {
+          const clave = `${alumno.id}_${fecha.fechaISO}`;
+          const estado = asistencias[clave];
+          if (estado === 'presente') row.push('P');
+          else if (estado === 'ausente') row.push('A');
+          else if (estado === 'tardanza') row.push('T');
+          else row.push('-');
+        });
+
+        const totales = calcularTotalesAlumno(alumno.id);
+        row.push(totales.p);
+        row.push(totales.a);
+        row.push(totales.t);
+
+        return row;
+      });
+
+      const asistenciaHeaders = [
+        'Nº',
+        'Alumno',
+        'DNI',
+        ...fechasDelMes.map((fecha) => fecha.etiqueta),
+        'P',
+        'A',
+        'T'
+      ];
+
+      autoTable(doc, {
+        head: [asistenciaHeaders],
+        body: asistenciaData,
+        startY: yPosition,
+        margin: { left: 15, right: 15 }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      doc.text('Estadísticas', 15, yPosition);
+      yPosition += 8;
+
+      const statsData = alumnos.map((alumno, index) => {
+        const stats = calcularEstadisticas(alumno.id);
+        return [
+          index + 1,
+          alumno.nombre,
+          alumno.dni || '-',
+          stats.p,
+          stats.a,
+          stats.t,
+          fechasDelMes.length,
+          `${stats.porcentaje}%`
+        ];
+      });
+
+      const statsHeaders = ['Nº', 'Alumno', 'DNI', 'Presentes', 'Ausentes', 'Tardanzas', 'Total de clases', '% Asistencia'];
+
+      autoTable(doc, {
+        head: [statsHeaders],
+        body: statsData,
+        startY: yPosition,
+        margin: { left: 15, right: 15 }
+      });
+
+      const fileName = `Planilla_${course.nombre}_${mesSeleccionado}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+    }
   };
 
   const getNextDateISO = (fechaISO) => {
@@ -614,7 +711,7 @@ function AttendanceSheet({ logout }) {
                 e.target.style.boxShadow = '0 4px 15px rgba(147, 51, 234, 0.3)';
                 e.target.style.transform = 'translateY(0)';
               }}
-              onClick={() => console.log('Exportar PDF')}
+              onClick={exportarPDF}
             >
               Exportar PDF
             </button>
@@ -647,6 +744,7 @@ function AttendanceSheet({ logout }) {
                   <th style={thStyles}>Presentes</th>
                   <th style={thStyles}>Ausentes</th>
                   <th style={thStyles}>Tardanzas</th>
+                  <th style={thStyles}>Total de clases</th>
                   <th style={thStyles}>% Asistencia</th>
                 </tr>
               </thead>
@@ -661,6 +759,7 @@ function AttendanceSheet({ logout }) {
                       <td style={{ ...tdStyles, color: '#4caf50', fontWeight: 600 }}>{stats.p}</td>
                       <td style={{ ...tdStyles, color: '#f44336', fontWeight: 600 }}>{stats.a}</td>
                       <td style={{ ...tdStyles, color: '#ff9800', fontWeight: 600 }}>{stats.t}</td>
+                      <td style={{ ...tdStyles, color: '#9da3bf', fontWeight: 600 }}>{fechasDelMes.length}</td>
                       <td style={{ ...tdStyles, color: '#9da3bf', fontWeight: 600 }}>{stats.porcentaje}%</td>
                     </tr>
                   );
