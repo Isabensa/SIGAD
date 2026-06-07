@@ -226,6 +226,24 @@ const generarFechasDelMes = (mesStr, diasClase) => {
   return fechas;
 };
 
+// Mapeo inverso: estados de PocketBase a estado local
+const estadoDelPocketBase = {
+  'Presente': 'presente',
+  'Ausente': 'ausente',
+  'Tardanza': 'tardanza'
+};
+
+// Calcula el rango de fechas del mes para filtrar
+const getMonthDateRange = (mesStr) => {
+  const [year, month] = mesStr.split('-').map(Number);
+  const startDate = `${mesStr}-01`;
+  const nextMonth = month === 12
+    ? `${year + 1}-01`
+    : `${year}-${String(month + 1).padStart(2, '0')}`;
+  const endDate = `${nextMonth}-01`;
+  return { startDate, endDate };
+};
+
 function AttendanceSheet({ logout }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -233,6 +251,7 @@ function AttendanceSheet({ logout }) {
   const [alumnos, setAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [asistencias, setAsistencias] = useState({});
+  const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
   
   // Obtener mes actual en formato YYYY-MM
   const hoy = new Date();
@@ -262,6 +281,15 @@ function AttendanceSheet({ logout }) {
       else if (estado === 'tardanza') t++;
     });
     return { p, a, t };
+  };
+
+  const calcularEstadisticas = (alumnoId) => {
+    const { p, a, t } = calcularTotalesAlumno(alumnoId);
+    const totalClases = fechasDelMes.length;
+    const porcentaje = totalClases > 0 
+      ? ((p + t * 0.5) / totalClases * 100).toFixed(1)
+      : 0;
+    return { p, a, t, porcentaje };
   };
 
   const getNextDateISO = (fechaISO) => {
@@ -375,6 +403,38 @@ function AttendanceSheet({ logout }) {
       loadData();
     }
   }, [id]);
+
+  // Cargar asistencias existentes cuando cambien id, alumnos o mes
+  useEffect(() => {
+    const loadExistingAsistencias = async () => {
+      if (!id || !alumnos.length) return;
+
+      try {
+        const { startDate, endDate } = getMonthDateRange(mesSeleccionado);
+        const existingAsistencias = await pb.collection('asistencias').getFullList({
+          filter: `cursoId = "${id}" && fecha >= "${startDate}" && fecha < "${endDate}"`,
+          requestKey: null
+        });
+
+        const nuevasAsistencias = {};
+        existingAsistencias.forEach((asistencia) => {
+          const fechaISO = asistencia.fecha?.slice(0, 10);
+          const estado = estadoDelPocketBase[asistencia.estado];
+
+          if (fechaISO && estado) {
+            const clave = `${asistencia.alumnoId}_${fechaISO}`;
+            nuevasAsistencias[clave] = estado;
+          }
+        });
+
+        setAsistencias(nuevasAsistencias);
+      } catch (error) {
+        console.error('Error al cargar asistencias existentes:', error);
+      }
+    };
+
+    loadExistingAsistencias();
+  }, [id, alumnos.length, mesSeleccionado]);
 
   // Normalizar diasClase para manejar tanto arrays como strings
   const diasClase = normalizeDiasClase(course?.diasClase);
@@ -537,7 +597,7 @@ function AttendanceSheet({ logout }) {
                 e.target.style.boxShadow = '0 4px 15px rgba(147, 51, 234, 0.3)';
                 e.target.style.transform = 'translateY(0)';
               }}
-              onClick={() => console.log('Ver estadísticas')}
+              onClick={() => setMostrarEstadisticas(!mostrarEstadisticas)}
             >
               Ver estadísticas
             </button>
@@ -575,6 +635,40 @@ function AttendanceSheet({ logout }) {
             <span style={summaryValueStyles}>{totalCeldas}</span>
           </div>
         </div>
+
+        {mostrarEstadisticas && (
+          <div style={tableContainerStyles}>
+            <table style={tableStyles}>
+              <thead>
+                <tr>
+                  <th style={{ ...thStyles, textAlign: 'left' }}>Nº</th>
+                  <th style={{ ...thStyles, textAlign: 'left' }}>Alumno</th>
+                  <th style={thStyles}>DNI</th>
+                  <th style={thStyles}>Presentes</th>
+                  <th style={thStyles}>Ausentes</th>
+                  <th style={thStyles}>Tardanzas</th>
+                  <th style={thStyles}>% Asistencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alumnos.map((alumno, index) => {
+                  const stats = calcularEstadisticas(alumno.id);
+                  return (
+                    <tr key={alumno.id}>
+                      <td style={{ ...tdStyles, textAlign: 'left' }}>{index + 1}</td>
+                      <td style={{ ...tdStyles, textAlign: 'left' }}>{alumno.nombre}</td>
+                      <td style={tdStyles}>{alumno.dni || '-'}</td>
+                      <td style={{ ...tdStyles, color: '#4caf50', fontWeight: 600 }}>{stats.p}</td>
+                      <td style={{ ...tdStyles, color: '#f44336', fontWeight: 600 }}>{stats.a}</td>
+                      <td style={{ ...tdStyles, color: '#ff9800', fontWeight: 600 }}>{stats.t}</td>
+                      <td style={{ ...tdStyles, color: '#9da3bf', fontWeight: 600 }}>{stats.porcentaje}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div style={tableContainerStyles}>
           <table style={tableStyles}>
