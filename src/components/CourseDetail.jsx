@@ -17,20 +17,20 @@ const pageStyles = {
 
 const cardStyles = {
   width: '100%',
-  maxWidth: '1100px',
-  padding: '32px',
-  borderRadius: '28px',
+  maxWidth: '1200px',
+  padding: '24px',
+  borderRadius: '22px',
   background: 'transparent',
   border: 'none',
   boxShadow: 'none',
   display: 'flex',
   flexDirection: 'column',
-  gap: '24px'
+  gap: '20px'
 };
 
 const topActionsWrapperStyles = {
   width: '100%',
-  maxWidth: '1100px',
+  maxWidth: '1200px',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
@@ -321,7 +321,7 @@ function CourseDetail({ logout }) {
         {course ? (
           <>
             <div style={{ padding: '24px', borderRadius: '20px', background: 'rgba(15, 18, 33, 0.96)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <header style={{ marginBottom: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+              <header style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
                   <h1 style={{ ...titleStyles, fontSize: '1.6rem', marginBottom: '8px' }}>Detalle del curso</h1>
                   <p style={subtitleStyles}>Revisa y edita los datos del curso.</p>
@@ -334,20 +334,20 @@ function CourseDetail({ logout }) {
               </header>
 
               {!editMode ? (
-                <div style={{ display: 'grid', gap: '20px' }}>
-                  <div style={{ padding: '20px 22px', borderRadius: '18px', background: 'rgba(255, 182, 193, 0.08)', border: '1px solid rgba(255, 182, 193, 0.18)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 760 ? '1fr' : 'repeat(3, 1fr)', gap: '16px', alignItems: 'start' }}>
+                  <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(141, 107, 255, 0.06)', border: '1px solid rgba(141, 107, 255, 0.12)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.03)' }}>
                     <div style={{ minWidth: 0 }}>
-                      <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Nombre del curso</p>
-                      <p style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#eef0ff', lineHeight: 1.2 }}>{course.nombre}</p>
+                      <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.78rem', fontWeight: 700 }}>Nombre del curso</p>
+                      <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#eef0ff', lineHeight: 1.2 }}>{course.nombre}</p>
                     </div>
                   </div>
-                  <div style={{ padding: '20px 22px', borderRadius: '18px', background: 'rgba(255, 182, 193, 0.06)', border: '1px solid rgba(255, 182, 193, 0.12)' }}>
-                    <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Descripción del curso</p>
-                    <p style={{ margin: 0, color: '#e8ebff', fontSize: '1rem', lineHeight: 1.7 }}>{course.descripcion || 'Sin descripción'}</p>
+                  <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(141, 107, 255, 0.04)', border: '1px solid rgba(141, 107, 255, 0.1)' }}>
+                    <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.78rem', fontWeight: 700 }}>Descripción del curso</p>
+                    <p style={{ margin: 0, color: '#e8ebff', fontSize: '0.95rem', lineHeight: 1.6 }}>{course.descripcion || 'Sin descripción'}</p>
                   </div>
-                  <div style={{ padding: '20px 22px', borderRadius: '18px', background: 'rgba(255, 182, 193, 0.06)', border: '1px solid rgba(255, 182, 193, 0.12)' }}>
-                    <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.82rem', fontWeight: 700 }}>Días de clase</p>
-                    <p style={{ margin: 0, color: '#e8ebff', fontSize: '1rem', lineHeight: 1.7 }}>
+                  <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(141, 107, 255, 0.04)', border: '1px solid rgba(141, 107, 255, 0.1)' }}>
+                    <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.78rem', fontWeight: 700 }}>Días de clase</p>
+                    <p style={{ margin: 0, color: '#e8ebff', fontSize: '0.95rem', lineHeight: 1.6 }}>
                       {normalizeDiasClase(course?.diasClase).length > 0
                         ? normalizeDiasClase(course?.diasClase).join(', ')
                         : 'No configurados'}

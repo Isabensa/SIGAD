@@ -297,64 +297,77 @@ function Dashboard({ pb, logout }) {
 
         {showCourseInput && (
           <section style={sectionCardStyles}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <input
-                  type="text"
-                  placeholder="Nombre del curso"
-                  value={courseName}
-                  onChange={(event) => setCourseName(event.target.value)}
-                  style={{ ...inputStyles, flex: '1 1 320px' }}
-                />
-                <input
-                  type="text"
-                  placeholder="Escuela"
-                  value={escuela}
-                  onChange={(event) => setEscuela(event.target.value)}
-                  style={{ ...inputStyles, flex: '1 1 240px' }}
-                />
-                <input
-                  type="text"
-                  placeholder="Año"
-                  value={anio}
-                  onChange={(event) => setAnio(event.target.value)}
-                  style={{ ...inputStyles, width: '120px' }}
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Primera fila: Nombre del curso | Escuela | Año */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 0.8fr', gap: '16px' }}>
+                <div>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Nombre del curso</p>
+                  <input
+                    type="text"
+                    placeholder="Nombre del curso"
+                    value={courseName}
+                    onChange={(event) => setCourseName(event.target.value)}
+                    style={{ ...inputStyles, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Escuela</p>
+                  <input
+                    type="text"
+                    placeholder="Escuela"
+                    value={escuela}
+                    onChange={(event) => setEscuela(event.target.value)}
+                    style={{ ...inputStyles, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Año</p>
+                  <input
+                    type="text"
+                    placeholder="Año"
+                    value={anio}
+                    onChange={(event) => setAnio(event.target.value)}
+                    style={{ ...inputStyles, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
-                <textarea
-                  placeholder="Descripción (opcional)"
-                  value={descripcion}
-                  onChange={(event) => setDescripcion(event.target.value)}
-                  style={{ ...inputStyles, minHeight: '84px', resize: 'vertical' }}
-                />
+              {/* Segunda fila: Descripción | Días de clase */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Descripción (opcional)</p>
+                  <textarea
+                    placeholder="Breve descripción del curso..."
+                    value={descripcion}
+                    onChange={(event) => setDescripcion(event.target.value)}
+                    style={{ ...inputStyles, minHeight: '110px', resize: 'vertical', maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
                 <div>
-                  <p style={{ margin: '0 0 12px', color: '#d7dcff', fontSize: '0.95rem', fontWeight: 600 }}>Días de clase</p>
+                  <p style={{ margin: '0 0 12px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Días de clase</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                     {['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'].map((dia) => (
                       <button
                         key={dia}
                         type="button"
                         onClick={() => setDiasClase((prev) =>
-                          prev.includes(dia)
-                            ? prev.filter((item) => item !== dia)
-                            : [...prev, dia]
+                          prev.includes(dia) ? prev.filter((item) => item !== dia) : [...prev, dia]
                         )}
                         style={{
-                          padding: '8px 16px',
-                          borderRadius: '12px',
+                          padding: '10px 14px',
+                          borderRadius: '14px',
                           border: diasClase.includes(dia)
                             ? '2px solid #8d6bff'
-                            : '1px solid rgba(255,255,255,0.2)',
+                            : '1px solid rgba(255,255,255,0.12)',
                           background: diasClase.includes(dia)
                             ? 'rgba(141, 107, 255, 0.25)'
                             : 'rgba(255,255,255,0.05)',
                           color: diasClase.includes(dia) ? '#eef0ff' : '#9da3bf',
-                          fontWeight: diasClase.includes(dia) ? 600 : 400,
+                          fontWeight: diasClase.includes(dia) ? 700 : 500,
                           cursor: 'pointer',
                           textTransform: 'capitalize',
-                          fontSize: '0.9rem',
+                          fontSize: '0.85rem',
+                          transition: 'all 0.2s ease'
                         }}
                       >
                         {dia}
@@ -364,8 +377,13 @@ function Dashboard({ pb, logout }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button style={{ ...actionButtonStyles, background: 'rgba(255,255,255,0.06)', color: '#d7dcff', boxShadow: 'none', fontWeight:600 }} type="button" onClick={() => setShowCourseInput(false)}>
+              {/* Botones de acción alineados a la derecha */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <button 
+                  style={{ ...actionButtonStyles, background: 'rgba(255,255,255,0.05)', color: '#d7dcff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.1)' }} 
+                  type="button" 
+                  onClick={() => setShowCourseInput(false)}
+                >
                   Cancelar
                 </button>
                 <button style={actionButtonStyles} type="button" onClick={saveCourse}>

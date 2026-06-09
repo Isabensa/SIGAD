@@ -5,18 +5,18 @@ const pageStyles = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '28px 20px 40px',
-  gap: '36px',
+  padding: '20px 16px 28px',
+  gap: '28px',
   background: 'radial-gradient(circle at top left, rgba(91, 45, 255, 0.32), transparent 28%), radial-gradient(circle at bottom right, rgba(255, 98, 177, 0.20), transparent 30%), #07070e',
   color: '#eef0ff'
 };
 
 const containerStyles = {
   width: '100%',
-  maxWidth: '1200px',
+  maxWidth: '1100px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '40px'
+  gap: '28px'
 };
 
 const headerStyles = {
@@ -24,28 +24,28 @@ const headerStyles = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: '20px'
+  gap: '16px'
 };
 
 const brandStyles = {
   display: 'flex',
   alignItems: 'center',
-  gap: '12px'
+  gap: '10px'
 };
 
 const brandNameStyles = {
   margin: 0,
-  fontSize: '1.45rem',
+  fontSize: '1.25rem',
   fontWeight: 800,
-  letterSpacing: '0.08em'
+  letterSpacing: '0.06em'
 };
 
 const smallBadgeStyles = {
-  padding: '6px 14px',
+  padding: '4px 10px',
   borderRadius: '999px',
-  background: 'rgba(141, 107, 255, 0.16)',
+  background: 'rgba(141, 107, 255, 0.12)',
   color: '#d7d8ff',
-  fontSize: '0.82rem',
+  fontSize: '0.78rem',
   fontWeight: 700
 };
 
@@ -53,122 +53,137 @@ const textButtonStyles = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '12px 22px',
-  borderRadius: '18px',
+  padding: '10px 18px',
+  borderRadius: '14px',
   background: 'linear-gradient(135deg, #8d6bff 0%, #ff3d9b 100%)',
   color: '#ffffff',
   fontWeight: 700,
-  textDecoration: 'none'
+  textDecoration: 'none',
+  fontSize: '0.95rem'
+};
+
+const smallButtonStyles = {
+  ...textButtonStyles,
+  padding: '8px 14px',
+  borderRadius: '12px',
+  fontWeight: 700,
+  fontSize: '0.9rem'
 };
 
 const heroStyles = {
   display: 'grid',
-  gridTemplateColumns: '1.1fr 0.9fr',
-  gap: '32px',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '20px',
   alignItems: 'center'
 };
 
 const heroTextStyles = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '24px'
+  gap: '16px'
 };
 
 const heroTitleStyles = {
   margin: 0,
-  fontSize: 'clamp(2rem, 4vw, 3.4rem)',
+  fontSize: 'clamp(1.6rem, 3.6vw, 2.6rem)',
   lineHeight: 1.05,
-  maxWidth: '700px'
+  maxWidth: '640px'
 };
 
 const heroDescriptionStyles = {
   margin: 0,
   color: '#a8accf',
-  fontSize: '1rem',
-  maxWidth: '620px',
-  lineHeight: 1.75
+  fontSize: '0.95rem',
+  maxWidth: '560px',
+  lineHeight: 1.6
 };
 
 const heroCardStyles = {
   width: '100%',
-  borderRadius: '32px',
-  padding: '28px',
-  background: 'rgba(15, 18, 33, 0.96)',
-  boxShadow: '0 40px 90px rgba(0, 0, 0, 0.32)',
-  border: '1px solid rgba(255,255,255,0.08)'
+  borderRadius: '20px',
+  padding: '18px',
+  background: 'rgba(15, 18, 33, 0.9)',
+  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.28)',
+  border: '1px solid rgba(255,255,255,0.06)'
 };
 
 const heroImageStyles = {
   width: '100%',
-  minHeight: '320px',
-  borderRadius: '24px',
-  background: 'linear-gradient(180deg, rgba(113, 70, 255, 0.18) 0%, rgba(255, 62, 155, 0.08) 100%), #141c39',
+  minHeight: '220px',
+  borderRadius: '16px',
+  background: 'linear-gradient(180deg, rgba(113, 70, 255, 0.14) 0%, rgba(255, 62, 155, 0.06) 100%), #141c39',
   display: 'grid',
   placeItems: 'center',
   color: 'rgba(255,255,255,0.8)',
-  fontSize: '0.95rem',
+  fontSize: '0.9rem',
   textAlign: 'center',
-  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)'
+  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.03)'
 };
 
 const featureGridStyles = {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-  gap: '20px'
+  gap: '12px'
 };
 
 const featureCardStyles = {
-  borderRadius: '24px',
-  padding: '24px',
-  background: 'rgba(7, 10, 22, 0.92)',
-  border: '1px solid rgba(255,255,255,0.06)',
-  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)'
+  borderRadius: '12px',
+  padding: '12px',
+  background: 'rgba(7, 10, 22, 0.88)',
+  border: '1px solid rgba(255,255,255,0.04)',
+  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.01)',
+  minHeight: '90px'
 };
 
 const featureTitleStyles = {
   margin: 0,
-  fontSize: '1rem',
+  fontSize: '0.95rem',
   fontWeight: 700
 };
 
 const featureTextStyles = {
-  margin: '10px 0 0',
+  margin: '8px 0 0',
   color: '#a6abd7',
-  fontSize: '0.95rem',
-  lineHeight: 1.6
+  fontSize: '0.88rem',
+  lineHeight: 1.4
+};
+
+const featuresHeaderStyles = {
+  marginBottom: '18px'
 };
 
 const finalSectionStyles = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '18px',
-  padding: '28px',
-  borderRadius: '28px',
-  background: 'rgba(15, 18, 33, 0.95)',
-  border: '1px solid rgba(255,255,255,0.07)',
+  gap: '12px',
+  padding: '16px',
+  borderRadius: '14px',
+  background: 'rgba(15, 18, 33, 0.6)',
+  border: '1px solid rgba(255,255,255,0.04)',
   textAlign: 'center'
 };
 
 const finalTitleStyles = {
   margin: 0,
-  fontSize: '1.55rem',
-  fontWeight: 700
+  fontSize: '1.15rem',
+  fontWeight: 700,
+  color: '#eef0ff'
 };
 
 const finalTextStyles = {
   margin: 0,
   color: '#b7bdd4',
-  fontSize: '1rem',
-  lineHeight: 1.75
+  fontSize: '0.95rem',
+  lineHeight: 1.5
 };
 
 const footerStyles = {
   width: '100%',
-  borderTop: '1px solid rgba(255,255,255,0.08)',
-  paddingTop: '20px',
+  borderTop: '1px solid rgba(255,255,255,0.06)',
+  paddingTop: '16px',
   textAlign: 'center',
   color: '#8f96b8',
-  fontSize: '0.9rem'
+  fontSize: '0.85rem'
 };
 
 const mediaQueries = {
@@ -187,7 +202,7 @@ function Landing() {
       <div style={containerStyles}>
         <header style={headerStyles}>
           <div style={brandStyles}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '16px', background: 'linear-gradient(135deg, #8d6bff, #ff3d9b)', display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800 }}>S</div>
+            <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'linear-gradient(135deg, #8d6bff, #ff3d9b)', display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800 }}>S</div>
             <div>
               <h1 style={brandNameStyles}>SIGAD</h1>
             </div>
@@ -223,10 +238,10 @@ function Landing() {
         </section>
 
         <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
-            <div>
-              <p style={{ margin: 0, color: '#9da3bf', fontSize: '0.95rem' }}>Funciones principales</p>
-              <h3 style={{ margin: '8px 0 0', fontSize: '1.8rem' }}>Todo lo que necesitas para trabajar con tranquilidad.</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+            <div style={featuresHeaderStyles}>
+              <p style={{ margin: 0, color: '#9da3bf', fontSize: '0.9rem' }}>Funciones principales</p>
+              <h3 style={{ margin: '6px 0 0', fontSize: '1.25rem', color: '#eef0ff' }}>Todo lo que necesitas para trabajar con tranquilidad.</h3>
             </div>
           </div>
 
@@ -251,11 +266,9 @@ function Landing() {
         </section>
 
         <section style={finalSectionStyles}>
-          <h3 style={finalTitleStyles}>Listo para impulsar tu trabajo docente</h3>
-          <p style={finalTextStyles}>SIGAD ofrece una experiencia profesional, minimalista y ágil para crear y administrar tu aula digital.</p>
-          <Link to="/login" style={textButtonStyles}>
-            Comenzar ahora
-          </Link>
+          <p style={{ margin: 0, color: '#9da3bf', fontSize: '0.95rem' }}>
+            Contacto: <a href="mailto:bensadoncelia@gmail.com" style={{ color: '#e9d5ff', textDecoration: 'underline' }}>bensadoncelia@gmail.com</a>
+          </p>
         </section>
 
         <footer style={footerStyles}>
