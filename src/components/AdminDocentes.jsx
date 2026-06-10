@@ -58,6 +58,17 @@ const secondaryButtonStyles = {
   cursor: 'pointer'
 };
 
+const protectedButtonStyles = {
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: '16px',
+  padding: '6px 12px',
+  background: 'rgba(255,255,255,0.04)',
+  color: '#9da3bf',
+  fontWeight: 600,
+  fontSize: '0.85rem',
+  cursor: 'not-allowed'
+};
+
 const titleStyles = {
   margin: 0,
   fontSize: '2rem',
@@ -111,6 +122,13 @@ function AdminDocentes({ pb, logout }) {
     normalizedAdminValue === 'admin' ||
     normalizedAdminValue === 'administración';
 
+  const isUserAdmin = (user) => {
+    const value = user?.administrador || '';
+    const normalizedValue = value.toString().trim().toLowerCase();
+
+    return normalizedValue === 'admin' || normalizedValue === 'administración';
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -163,6 +181,11 @@ function AdminDocentes({ pb, logout }) {
   };
 
   const handleToggleActivo = async (user) => {
+    if (isUserAdmin(user)) {
+      console.log('No se puede desactivar un usuario administrador.');
+      return;
+    }
+
     try {
       await pb.collection('users').update(user.id, {
         activo: !user.activo
@@ -231,38 +254,48 @@ function AdminDocentes({ pb, logout }) {
               </thead>
 
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td style={tdStyles}>{user.email}</td>
-                    <td style={tdStyles}>{user.name || 'Sin nombre'}</td>
-                    <td style={tdStyles}>
-                      <span
-                        style={{
-                          color: user.activo ? '#4caf50' : '#f44336',
-                          fontWeight: 700
-                        }}
-                      >
-                        {user.activo ? 'Sí' : 'No'}
-                      </span>
-                    </td>
-                    <td style={tdStyles}>{user.administrador || 'Docente'}</td>
-                    <td style={tdStyles}>
-                      <button
-                        style={{
-                          ...secondaryButtonStyles,
-                          fontSize: '0.85rem',
-                          padding: '6px 12px',
-                          borderColor: user.activo ? 'rgba(244, 67, 54, 0.4)' : 'rgba(76, 175, 80, 0.4)',
-                          color: user.activo ? '#ff8a80' : '#b9f6ca'
-                        }}
-                        type="button"
-                        onClick={() => handleToggleActivo(user)}
-                      >
-                        {user.activo ? 'Desactivar' : 'Activar'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const userIsAdmin = isUserAdmin(user);
+
+                  return (
+                    <tr key={user.id}>
+                      <td style={tdStyles}>{user.email}</td>
+                      <td style={tdStyles}>{user.name || 'Sin nombre'}</td>
+                      <td style={tdStyles}>
+                        <span
+                          style={{
+                            color: user.activo ? '#4caf50' : '#f44336',
+                            fontWeight: 700
+                          }}
+                        >
+                          {user.activo ? 'Sí' : 'No'}
+                        </span>
+                      </td>
+                      <td style={tdStyles}>{user.administrador || 'Docente'}</td>
+                      <td style={tdStyles}>
+                        {userIsAdmin ? (
+                          <button style={protectedButtonStyles} type="button" disabled>
+                            Administrador protegido
+                          </button>
+                        ) : (
+                          <button
+                            style={{
+                              ...secondaryButtonStyles,
+                              fontSize: '0.85rem',
+                              padding: '6px 12px',
+                              borderColor: user.activo ? 'rgba(244, 67, 54, 0.4)' : 'rgba(76, 175, 80, 0.4)',
+                              color: user.activo ? '#ff8a80' : '#b9f6ca'
+                            }}
+                            type="button"
+                            onClick={() => handleToggleActivo(user)}
+                          >
+                            {user.activo ? 'Desactivar' : 'Activar'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
