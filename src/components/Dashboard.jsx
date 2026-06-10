@@ -140,6 +140,13 @@ function Dashboard({ pb, logout }) {
 
   const navigate = useNavigate();
 
+  const adminValue = pb?.authStore?.model?.administrador || '';
+  const normalizedAdminValue = adminValue.toString().trim().toLowerCase();
+
+  const isAdmin =
+    normalizedAdminValue === 'admin' ||
+    normalizedAdminValue === 'administración';
+
   const handleLogout = () => {
     if (logout) {
       logout();
@@ -155,9 +162,12 @@ function Dashboard({ pb, logout }) {
     setShowCourseInput(true);
   };
 
+  const handleAdminDocentes = () => {
+    navigate('/admin/docentes');
+  };
+
   const fetchCourses = async () => {
     try {
-      // ensure we only fetch when auth is valid
       if (!pb?.authStore?.isValid) {
         console.log('fetchCourses: auth not valid, skipping');
         return;
@@ -176,6 +186,7 @@ function Dashboard({ pb, logout }) {
 
     const loadCourses = async () => {
       if (!mounted) return;
+
       try {
         if (!pb?.authStore?.isValid) {
           console.log('Dashboard mounted but auth not valid - skipping initial fetch');
@@ -183,7 +194,9 @@ function Dashboard({ pb, logout }) {
         }
 
         const coursesList = await getCourses(pb);
+
         if (!mounted) return;
+
         setCourses(coursesList);
         console.log('cursos obtenidos', coursesList);
       } catch (e) {
@@ -201,13 +214,11 @@ function Dashboard({ pb, logout }) {
   const saveCourse = async () => {
     console.log('CLICK EN GUARDAR');
 
-    // Validar campos obligatorios
     if (!courseName.trim() || !escuela.trim() || !anio.toString().trim()) {
       console.log('Por favor complete los campos: nombre, escuela y anio');
       return;
     }
 
-    // Validar que el usuario esté autenticado
     if (!pb?.authStore?.model?.id) {
       console.error('Error: Usuario no autenticado. docenteId no disponible');
       return;
@@ -229,7 +240,6 @@ function Dashboard({ pb, logout }) {
       const result = await createCourse(pb, payload);
       console.log('✅ curso guardado', result);
 
-      // limpiar formulario
       setCourseName('');
       setDescripcion('');
       setEscuela('');
@@ -278,17 +288,26 @@ function Dashboard({ pb, logout }) {
         <button className="topActionButton" type="button" onClick={handleGoBack}>
           Volver
         </button>
+
         <button className="topActionButton topActionButtonSecondary" type="button" onClick={handleLogout}>
           Salir del sistema
         </button>
       </div>
+
       <div style={panelStyles}>
         <div style={rowStyles}>
           <div>
             <h1 style={titleStyles}>Dashboard SIGAD</h1>
             <p style={subtitleStyles}>Bienvenido docente, gestiona tus cursos con una interfaz moderna.</p>
           </div>
+
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {isAdmin && (
+              <button style={actionButtonStyles} type="button" onClick={handleAdminDocentes}>
+                Administrar docentes
+              </button>
+            )}
+
             <button style={actionButtonStyles} type="button" onClick={handleCreateCourse}>
               Crear curso
             </button>
@@ -298,10 +317,11 @@ function Dashboard({ pb, logout }) {
         {showCourseInput && (
           <section style={sectionCardStyles}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* Primera fila: Nombre del curso | Escuela | Año */}
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 0.8fr', gap: '16px' }}>
                 <div>
-                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Nombre del curso</p>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
+                    Nombre del curso
+                  </p>
                   <input
                     type="text"
                     placeholder="Nombre del curso"
@@ -310,8 +330,11 @@ function Dashboard({ pb, logout }) {
                     style={{ ...inputStyles, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
+
                 <div>
-                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Escuela</p>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
+                    Escuela
+                  </p>
                   <input
                     type="text"
                     placeholder="Escuela"
@@ -320,8 +343,11 @@ function Dashboard({ pb, logout }) {
                     style={{ ...inputStyles, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
+
                 <div>
-                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Año</p>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
+                    Año
+                  </p>
                   <input
                     type="text"
                     placeholder="Año"
@@ -332,27 +358,43 @@ function Dashboard({ pb, logout }) {
                 </div>
               </div>
 
-              {/* Segunda fila: Descripción | Días de clase */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Descripción (opcional)</p>
+                  <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
+                    Descripción (opcional)
+                  </p>
                   <textarea
                     placeholder="Breve descripción del curso..."
                     value={descripcion}
                     onChange={(event) => setDescripcion(event.target.value)}
-                    style={{ ...inputStyles, minHeight: '110px', resize: 'vertical', maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}
+                    style={{
+                      ...inputStyles,
+                      minHeight: '110px',
+                      resize: 'vertical',
+                      maxWidth: '100%',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
                   />
                 </div>
+
                 <div>
-                  <p style={{ margin: '0 0 12px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>Días de clase</p>
+                  <p style={{ margin: '0 0 12px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
+                    Días de clase
+                  </p>
+
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                     {['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'].map((dia) => (
                       <button
                         key={dia}
                         type="button"
-                        onClick={() => setDiasClase((prev) =>
-                          prev.includes(dia) ? prev.filter((item) => item !== dia) : [...prev, dia]
-                        )}
+                        onClick={() =>
+                          setDiasClase((prev) =>
+                            prev.includes(dia)
+                              ? prev.filter((item) => item !== dia)
+                              : [...prev, dia]
+                          )
+                        }
                         style={{
                           padding: '10px 14px',
                           borderRadius: '14px',
@@ -377,15 +419,21 @@ function Dashboard({ pb, logout }) {
                 </div>
               </div>
 
-              {/* Botones de acción alineados a la derecha */}
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button 
-                  style={{ ...actionButtonStyles, background: 'rgba(255,255,255,0.05)', color: '#d7dcff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.1)' }} 
-                  type="button" 
+                <button
+                  style={{
+                    ...actionButtonStyles,
+                    background: 'rgba(255,255,255,0.05)',
+                    color: '#d7dcff',
+                    boxShadow: 'none',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
+                  type="button"
                   onClick={() => setShowCourseInput(false)}
                 >
                   Cancelar
                 </button>
+
                 <button style={actionButtonStyles} type="button" onClick={saveCourse}>
                   Guardar curso
                 </button>
@@ -397,10 +445,17 @@ function Dashboard({ pb, logout }) {
         <section style={sectionCardStyles}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#eef0ff' }}>Mis cursos</h2>
-              <p style={{ margin: '8px 0 0', color: '#8f97bd', fontSize: '0.92rem' }}>Accede rápidamente a tus cursos activos.</p>
+              <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#eef0ff' }}>
+                Mis cursos
+              </h2>
+              <p style={{ margin: '8px 0 0', color: '#8f97bd', fontSize: '0.92rem' }}>
+                Accede rápidamente a tus cursos activos.
+              </p>
             </div>
-            <span style={{ color: '#d7dcff', fontSize: '0.95rem', minWidth: 'fit-content' }}>{courses.length} curso{courses.length === 1 ? '' : 's'} activos</span>
+
+            <span style={{ color: '#d7dcff', fontSize: '0.95rem', minWidth: 'fit-content' }}>
+              {courses.length} curso{courses.length === 1 ? '' : 's'} activos
+            </span>
           </div>
 
           <div style={{ marginTop: '20px' }}>
@@ -411,10 +466,12 @@ function Dashboard({ pb, logout }) {
                 {courses.map((course) => (
                   <li key={course.id} className="dashboard-course-item" style={itemStyles}>
                     <span style={itemTitleStyles}>{course.nombre}</span>
+
                     <div style={controlsStyles}>
                       <button style={actionButtonStyles} type="button" onClick={() => navigate(`/curso/${course.id}`)}>
                         Entrar
                       </button>
+
                       <button style={actionButtonStyles} type="button" onClick={() => handleDeleteCourse(course.id)}>
                         Eliminar
                       </button>

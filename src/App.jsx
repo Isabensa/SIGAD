@@ -6,6 +6,7 @@ import Landing from './components/Landing';
 import Dashboard from './components/Dashboard';
 import CourseDetail from './components/CourseDetail';
 import AttendanceSheet from './components/AttendanceSheet';
+import AdminDocentes from './components/AdminDocentes';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -97,21 +98,45 @@ const subtitleStyles = {
   lineHeight: 1.6,
 };
 
+const errorStyles = {
+  width: '100%',
+  maxWidth: '380px',
+  padding: '12px 14px',
+  borderRadius: '14px',
+  background: 'rgba(255, 61, 155, 0.12)',
+  border: '1px solid rgba(255, 61, 155, 0.35)',
+  color: '#ff9fc9',
+  fontSize: '0.9rem',
+  lineHeight: 1.5,
+  boxSizing: 'border-box',
+};
+
 function LoginPage({ pb, onAuthSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoginError('');
 
     try {
-      await pb.collection('users').authWithPassword(email, password);
+      const authData = await pb.collection('users').authWithPassword(email, password);
+      const user = authData.record;
+
+      if (user.activo === false) {
+        pb.authStore.clear();
+        setLoginError('Tu usuario está inactivo. Comunicate con la administradora.');
+        return;
+      }
+
       console.log('login correcto');
       onAuthSuccess();
       navigate('/dashboard');
     } catch {
       console.log('error de login');
+      setLoginError('Correo o contraseña incorrectos.');
     }
   };
 
@@ -154,6 +179,12 @@ function LoginPage({ pb, onAuthSuccess }) {
             />
           </div>
 
+          {loginError && (
+            <p style={errorStyles}>
+              {loginError}
+            </p>
+          )}
+
           <button type="submit" style={buttonStyles}>
             Ingresar
           </button>
@@ -175,18 +206,30 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<LoginPage pb={pb} onAuthSuccess={() => setIsLoggedIn(true)} />} />
+
+        <Route
+          path="/login"
+          element={<LoginPage pb={pb} onAuthSuccess={() => setIsLoggedIn(true)} />}
+        />
+
         <Route
           path="/dashboard"
           element={isLoggedIn ? <Dashboard pb={pb} logout={logout} /> : <Navigate replace to="/login" />}
         />
+
         <Route
           path="/curso/:id"
           element={isLoggedIn ? <CourseDetail logout={logout} /> : <Navigate replace to="/login" />}
         />
+
         <Route
           path="/curso/:id/asistencia"
           element={isLoggedIn ? <AttendanceSheet logout={logout} /> : <Navigate replace to="/login" />}
+        />
+
+        <Route
+          path="/admin/docentes"
+          element={isLoggedIn ? <AdminDocentes pb={pb} logout={logout} /> : <Navigate replace to="/login" />}
         />
       </Routes>
     </BrowserRouter>
