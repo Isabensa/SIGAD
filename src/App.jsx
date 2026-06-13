@@ -7,6 +7,10 @@ import Dashboard from './components/Dashboard';
 import CourseDetail from './components/CourseDetail';
 import AttendanceSheet from './components/AttendanceSheet';
 import AdminDocentes from './components/AdminDocentes';
+import Payments from './components/Payments';
+import AdminPayments from './components/AdminPayments';
+import { ChangePassword, ForgotPassword, ResetPassword } from './components/AccountAccess';
+import TeacherProfile from './components/TeacherProfile';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -115,11 +119,14 @@ function LoginPage({ pb, onAuthSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (loggingIn) return;
     setLoginError('');
+    setLoggingIn(true);
 
     try {
       const authData = await pb.collection('users').authWithPassword(email, password);
@@ -127,25 +134,50 @@ function LoginPage({ pb, onAuthSuccess }) {
 
       if (user.activo === false) {
         pb.authStore.clear();
-        setLoginError('Tu usuario está inactivo. Comunicate con la administradora.');
+        setLoginError('Tu espacio está suspendido. Comunícate con la administración.');
         return;
       }
 
-      console.log('login correcto');
+      const subscriptionStatus = user.suscripcionEstado;
+      const subscriptionExpiration = user.suscripcionHasta
+        ? new Date(user.suscripcionHasta).getTime()
+        : 0;
+      const hasCommercialAccess = subscriptionStatus === 'exento' || (
+        subscriptionStatus === 'activo' && subscriptionExpiration >= Date.now()
+      );
+
+      if (!hasCommercialAccess) {
+        const messages = {
+          pendiente: 'Tu espacio todavía está pendiente de habilitación.',
+          vencido: 'El alquiler de tu espacio está vencido.',
+          suspendido: 'Tu espacio está suspendido.'
+        };
+        if (user.administrador === 'docente') {
+          onAuthSuccess();
+          navigate('/pagos');
+          return;
+        }
+        pb.authStore.clear();
+        setLoginError(messages[subscriptionStatus] || 'Tu espacio no tiene una suscripción vigente.');
+        return;
+      }
+
       onAuthSuccess();
       navigate('/dashboard');
     } catch {
-      console.log('error de login');
       setLoginError('Correo o contraseña incorrectos.');
+    } finally {
+      setLoggingIn(false);
     }
   };
 
   return (
-    <main style={pageStyles}>
-      <section style={cardStyles}>
+    <main style={pageStyles} className="auth-page">
+      <section style={cardStyles} className="auth-card">
         <header>
+          <p className="auth-eyebrow">Acceso docente</p>
           <h1 style={headingStyles}>SIGAD</h1>
-          <p style={subtitleStyles}>Gestión Académica de Próxima Generación</p>
+          <p style={subtitleStyles}>Gestiona cursos, alumnos y asistencias desde un espacio simple y seguro.</p>
         </header>
 
         <form onSubmit={handleSubmit} style={formStyles}>
@@ -185,8 +217,12 @@ function LoginPage({ pb, onAuthSuccess }) {
             </p>
           )}
 
-          <button type="submit" style={buttonStyles}>
-            Ingresar
+          <button type="submit" style={buttonStyles} className="busy-button app-primary-button" disabled={loggingIn}>
+            {loggingIn && <span className="button-spinner" aria-hidden="true" />}
+            {loggingIn ? 'Ingresando...' : 'Ingresar'}
+          </button>
+          <button type="button" className="app-secondary-button" disabled={loggingIn} style={{ ...buttonStyles, marginTop: 0, background: 'rgba(255,255,255,0.07)', boxShadow: 'none' }} onClick={() => navigate('/recuperar-clave')}>
+            Olvidé mi contraseña
           </button>
         </form>
       </section>
@@ -196,6 +232,13 @@ function LoginPage({ pb, onAuthSuccess }) {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(pb.authStore.isValid);
+  const [sessionStartedAt] = useState(() => Date.now());
+  const currentUser = pb.authStore.model;
+  const canUseCourses = currentUser?.suscripcionEstado === 'exento' || (
+    currentUser?.suscripcionEstado === 'activo' &&
+    currentUser?.suscripcionHasta &&
+    new Date(currentUser.suscripcionHasta).getTime() >= sessionStartedAt
+  );
 
   const logout = () => {
     pb.authStore.clear();
@@ -205,32 +248,38 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Landing pb={pb} />} />
 
         <Route
           path="/login"
           element={<LoginPage pb={pb} onAuthSuccess={() => setIsLoggedIn(true)} />}
         />
+        <Route path="/recuperar-clave" element={<ForgotPassword pb={pb} />} />
+        <Route path="/reset-password" element={<ResetPassword pb={pb} />} />
+        <Route path="/seguridad" element={isLoggedIn ? <ChangePassword pb={pb} logout={logout} /> : <Navigate replace to="/login" />} />
+        <Route path="/perfil" element={isLoggedIn ? <TeacherProfile pb={pb} /> : <Navigate replace to="/login" />} />
 
         <Route
           path="/dashboard"
-          element={isLoggedIn ? <Dashboard pb={pb} logout={logout} /> : <Navigate replace to="/login" />}
+          element={isLoggedIn ? (canUseCourses ? <Dashboard pb={pb} logout={logout} /> : <Navigate replace to="/pagos" />) : <Navigate replace to="/login" />}
         />
 
         <Route
           path="/curso/:id"
-          element={isLoggedIn ? <CourseDetail logout={logout} /> : <Navigate replace to="/login" />}
+          element={isLoggedIn ? (canUseCourses ? <CourseDetail logout={logout} /> : <Navigate replace to="/pagos" />) : <Navigate replace to="/login" />}
         />
 
         <Route
           path="/curso/:id/asistencia"
-          element={isLoggedIn ? <AttendanceSheet logout={logout} /> : <Navigate replace to="/login" />}
+          element={isLoggedIn ? (canUseCourses ? <AttendanceSheet logout={logout} /> : <Navigate replace to="/pagos" />) : <Navigate replace to="/login" />}
         />
 
         <Route
           path="/admin/docentes"
           element={isLoggedIn ? <AdminDocentes pb={pb} logout={logout} /> : <Navigate replace to="/login" />}
         />
+        <Route path="/pagos" element={isLoggedIn ? <Payments pb={pb} logout={logout} /> : <Navigate replace to="/login" />} />
+        <Route path="/admin/pagos" element={isLoggedIn ? <AdminPayments pb={pb} /> : <Navigate replace to="/login" />} />
       </Routes>
     </BrowserRouter>
   );

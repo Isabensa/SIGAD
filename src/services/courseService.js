@@ -17,11 +17,28 @@ export async function createCourse(pb, data) {
   }
 }
 
-export async function deleteCourse(pb, id) {
+export async function archiveCourse(pb, id) {
   try {
-    return await pb.collection('cursos').delete(id, { requestKey: null });
+    return await pb.collection('cursos').update(id, {
+      archivado: true,
+      archivadoEn: new Date().toISOString()
+    }, { requestKey: null });
   } catch (error) {
-    console.log('error al eliminar curso', error);
+    console.log('error al archivar curso', error);
     throw error;
   }
+}
+
+export async function restoreCourse(pb, id) {
+  return await pb.collection('cursos').update(id, {
+    archivado: false,
+    archivadoEn: ''
+  }, { requestKey: null });
+}
+
+export async function permanentlyDeleteCourse(pb, id) {
+  return await pb.send(`/api/sigad/courses/${id}/permanent`, {
+    method: 'DELETE',
+    requestKey: null
+  });
 }

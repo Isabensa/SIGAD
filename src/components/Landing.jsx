@@ -1,351 +1,140 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { getPublicApplicationStatus, submitApplication } from '../services/applicationService';
 
-const pageStyles = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: '20px 16px 28px',
-  gap: '28px',
-  background:
-    'radial-gradient(circle at top left, rgba(91, 45, 255, 0.32), transparent 28%), radial-gradient(circle at bottom right, rgba(255, 98, 177, 0.20), transparent 30%), #07070e',
-  color: '#eef0ff',
-};
+const plans = [
+  { months: '1', name: 'Mensual', price: 10000, detail: 'Flexibilidad mes a mes', discount: 'Precio base' },
+  { months: '4', name: 'Cuatrimestral', price: 36000, detail: 'Equivale a $9.000 por mes', discount: '10 % de descuento' },
+  { months: '12', name: 'Anual', price: 96000, detail: 'Equivale a $8.000 por mes', discount: '20 % de descuento' }
+];
+const page = { minHeight: '100vh', padding: '22px', background: 'radial-gradient(circle at top left,rgba(91,45,255,.3),transparent 30%),radial-gradient(circle at bottom right,rgba(255,61,155,.2),transparent 28%),#07070e', color: '#eef0ff' };
+const container = { maxWidth: '1120px', margin: '0 auto', display: 'grid', gap: '34px' };
+const button = { border: 0, borderRadius: '15px', padding: '12px 18px', background: 'linear-gradient(135deg,#8d6bff,#ff3d9b)', color: '#fff', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' };
+const input = { width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,.14)', background: 'rgba(255,255,255,.05)', color: '#eef0ff', boxSizing: 'border-box' };
 
-const containerStyles = {
-  width: '100%',
-  maxWidth: '1100px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '28px',
-};
+function Landing({ pb }) {
+  const [selectedPlan, setSelectedPlan] = useState(plans[0]);
+  const [activeModal, setActiveModal] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState(null);
+  const [form, setForm] = useState({ nombre: '', dni: '', email: '', telefono: '', fechaPago: '', medioPago: 'transferencia', numeroOperacion: '', comprobante: null, acepta: false });
+  const [statusForm, setStatusForm] = useState({ email: '', dni: '', numeroOperacion: '' });
 
-const headerStyles = {
-  width: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '16px',
-};
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!form.comprobante || !form.acepta || !form.nombre.trim() || !form.dni.trim() || !form.email.trim() || !form.telefono.trim() || !form.fechaPago || !form.numeroOperacion.trim()) {
+      await Swal.fire('Datos incompletos', 'Completa el formulario, adjunta el comprobante y acepta las condiciones.', 'warning'); return;
+    }
+    try {
+      setSaving(true);
+      const data = new FormData();
+      Object.entries({ nombre: form.nombre.trim(), dni: form.dni.trim(), email: form.email.trim(), telefono: form.telefono.trim(), meses: selectedPlan.months, importe: selectedPlan.price, fechaPago: `${form.fechaPago} 12:00:00.000Z`, medioPago: form.medioPago, numeroOperacion: form.numeroOperacion.trim(), estado: 'pendiente' }).forEach(([key, value]) => data.append(key, value));
+      data.append('comprobante', form.comprobante);
+      await submitApplication(pb, data);
+      setStatusForm({ email: form.email.trim(), dni: form.dni.trim(), numeroOperacion: form.numeroOperacion.trim() });
+      setForm({ nombre: '', dni: '', email: '', telefono: '', fechaPago: '', medioPago: 'transferencia', numeroOperacion: '', comprobante: null, acepta: false });
+      setActiveModal(null);
+      await Swal.fire('Solicitud enviada', 'Puedes consultar el avance con tu correo, DNI y número de operación.', 'success');
+    } catch (error) {
+      console.error(error);
+      await Swal.fire('No se pudo enviar', error?.response?.message || 'Revisa los datos e intenta nuevamente.', 'error');
+    } finally { setSaving(false); }
+  };
 
-const brandStyles = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-};
+  const checkStatus = async (event) => {
+    event.preventDefault();
+    if (!statusForm.email.trim() || !statusForm.dni.trim() || !statusForm.numeroOperacion.trim()) {
+      await Swal.fire('Datos incompletos', 'Completa los tres datos de la solicitud.', 'warning');
+      return;
+    }
 
-const brandNameStyles = {
-  margin: 0,
-  fontSize: '1.25rem',
-  fontWeight: 800,
-  letterSpacing: '0.06em',
-};
+    try {
+      setCheckingStatus(true);
+      setApplicationStatus(null);
+      const result = await getPublicApplicationStatus(pb, {
+        email: statusForm.email.trim(),
+        dni: statusForm.dni.trim(),
+        numeroOperacion: statusForm.numeroOperacion.trim()
+      });
+      setApplicationStatus(result);
+    } catch (error) {
+      await Swal.fire('Solicitud no encontrada', error?.response?.message || 'Verifica los datos e intenta nuevamente.', 'info');
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
-const smallBadgeStyles = {
-  padding: '4px 10px',
-  borderRadius: '999px',
-  background: 'rgba(141, 107, 255, 0.12)',
-  color: '#d7d8ff',
-  fontSize: '0.78rem',
-  fontWeight: 700,
-};
+  const statusLabels = { pendiente: 'Pendiente de revisión', aprobado: 'Aprobada', rechazado: 'Rechazada' };
+  const planLabels = { 1: 'Mensual', 4: 'Cuatrimestral', 12: 'Anual' };
 
-const textButtonStyles = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '10px 18px',
-  borderRadius: '14px',
-  background: 'linear-gradient(135deg, #8d6bff 0%, #ff3d9b 100%)',
-  color: '#ffffff',
-  fontWeight: 700,
-  textDecoration: 'none',
-  fontSize: '0.95rem',
-};
-
-const heroStyles = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: '20px',
-  alignItems: 'center',
-};
-
-const heroTextStyles = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '16px',
-};
-
-const heroTitleStyles = {
-  margin: 0,
-  fontSize: 'clamp(1.6rem, 3.6vw, 2.6rem)',
-  lineHeight: 1.05,
-  maxWidth: '640px',
-};
-
-const heroDescriptionStyles = {
-  margin: 0,
-  color: '#a8accf',
-  fontSize: '0.95rem',
-  maxWidth: '560px',
-  lineHeight: 1.6,
-};
-
-const heroCardStyles = {
-  width: '100%',
-  borderRadius: '20px',
-  padding: '18px',
-  background: 'rgba(15, 18, 33, 0.9)',
-  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.28)',
-  border: '1px solid rgba(255,255,255,0.06)',
-};
-
-const heroImageStyles = {
-  width: '100%',
-  minHeight: '220px',
-  borderRadius: '16px',
-  background:
-    'linear-gradient(180deg, rgba(113, 70, 255, 0.14) 0%, rgba(255, 62, 155, 0.06) 100%), #141c39',
-  display: 'grid',
-  placeItems: 'center',
-  color: 'rgba(255,255,255,0.8)',
-  fontSize: '0.9rem',
-  textAlign: 'center',
-  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.03)',
-};
-
-const featureGridStyles = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-  gap: '12px',
-};
-
-const featureCardStyles = {
-  borderRadius: '12px',
-  padding: '12px',
-  background: 'rgba(7, 10, 22, 0.88)',
-  border: '1px solid rgba(255,255,255,0.04)',
-  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.01)',
-  minHeight: '90px',
-};
-
-const featureTitleStyles = {
-  margin: 0,
-  fontSize: '0.95rem',
-  fontWeight: 700,
-};
-
-const featureTextStyles = {
-  margin: '8px 0 0',
-  color: '#a6abd7',
-  fontSize: '0.88rem',
-  lineHeight: 1.4,
-};
-
-const featuresHeaderStyles = {
-  marginBottom: '18px',
-};
-
-const finalSectionStyles = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '12px',
-  padding: '16px',
-  borderRadius: '14px',
-  background: 'rgba(15, 18, 33, 0.6)',
-  border: '1px solid rgba(255,255,255,0.04)',
-  textAlign: 'center',
-};
-
-const footerStyles = {
-  width: '100%',
-  borderTop: '1px solid rgba(255,255,255,0.06)',
-  paddingTop: '16px',
-  textAlign: 'center',
-  color: '#8f96b8',
-  fontSize: '0.85rem',
-};
-
-const mediaQueries = {
-  heroStyles: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  featureGridStyles: {
-    gridTemplateColumns: '1fr 1fr',
-  },
-};
-
-function Landing() {
-  return (
-    <main style={pageStyles}>
-      <div style={containerStyles}>
-        <header style={headerStyles}>
-          <div style={brandStyles}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #8d6bff, #ff3d9b)',
-                display: 'grid',
-                placeItems: 'center',
-                color: '#fff',
-                fontWeight: 800,
-              }}
-            >
-              S
-            </div>
-            <div>
-              <h1 style={brandNameStyles}>SIGAD</h1>
-            </div>
-          </div>
-
-          <Link to="/login" style={textButtonStyles}>
-            Acceder
-          </Link>
-        </header>
-
-        <section
-          style={{
-            ...heroStyles,
-            ...(window.innerWidth < 900 ? mediaQueries.heroStyles : {}),
-          }}
-        >
-          <div style={heroTextStyles}>
-            <div style={smallBadgeStyles}>Gestión Académica</div>
-
-            <div>
-              <h2 style={heroTitleStyles}>
-                Gestión Académica de Próxima Generación
-              </h2>
-              <p style={heroDescriptionStyles}>
-                SIGAD ayuda a docentes a organizar cursos, estudiantes y
-                asistencia con una experiencia moderna, rápida y totalmente
-                enfocada en resultados.
-              </p>
-            </div>
-
-            <Link to="/login" style={textButtonStyles}>
-              Ingresar
-            </Link>
-          </div>
-
-          <div style={heroCardStyles}>
-            <img
-              src="/images/sigad-hero.png"
-              alt="Sistema SIGAD en una computadora futurista"
-              style={{
-                ...heroImageStyles,
-                objectFit: 'cover',
-                display: 'block',
-              }}
-            />
-          </div>
-        </section>
-
-        <section>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-              alignItems: 'center',
-            }}
-          >
-            <div style={featuresHeaderStyles}>
-              <p
-                style={{
-                  margin: 0,
-                  color: '#9da3bf',
-                  fontSize: '0.9rem',
-                }}
-              >
-                Funciones principales
-              </p>
-              <h3
-                style={{
-                  margin: '6px 0 0',
-                  fontSize: '1.25rem',
-                  color: '#eef0ff',
-                }}
-              >
-                Todo lo que necesitas para trabajar con tranquilidad.
-              </h3>
-            </div>
-          </div>
-
-          <div
-            style={{
-              ...featureGridStyles,
-              ...(window.innerWidth < 760
-                ? { gridTemplateColumns: '1fr' }
-                : {}),
-            }}
-          >
-            <div style={featureCardStyles}>
-              <h4 style={featureTitleStyles}>Gestión de cursos</h4>
-              <p style={featureTextStyles}>
-                Crea, organiza y accede a tus cursos con una vista clara y
-                centralizada.
-              </p>
-            </div>
-
-            <div style={featureCardStyles}>
-              <h4 style={featureTitleStyles}>Registro de asistencia</h4>
-              <p style={featureTextStyles}>
-                Controla la asistencia de estudiantes con seguimiento simple y
-                visual.
-              </p>
-            </div>
-
-            <div style={featureCardStyles}>
-              <h4 style={featureTitleStyles}>Organización de estudiantes</h4>
-              <p style={featureTextStyles}>
-                Mantén a tus grupos y perfiles ordenados para acceso rápido.
-              </p>
-            </div>
-
-            <div style={featureCardStyles}>
-              <h4 style={featureTitleStyles}>
-                Acceso en cualquier dispositivo
-              </h4>
-              <p style={featureTextStyles}>
-                Funciona bien en escritorio y móvil para tener todo siempre
-                disponible.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section style={finalSectionStyles}>
-          <p
-            style={{
-              margin: 0,
-              color: '#9da3bf',
-              fontSize: '0.95rem',
-            }}
-          >
-            Contacto:{' '}
-            <a
-              href="mailto:bensadoncelia@gmail.com"
-              style={{
-                color: '#e9d5ff',
-                textDecoration: 'underline',
-              }}
-            >
-              bensadoncelia@gmail.com
-            </a>
-          </p>
-        </section>
-
-        <footer style={footerStyles}>
-          SIGAD • {new Date().getFullYear()}
-        </footer>
+  return <main style={page} className="landing-page"><div style={container} className="landing-container">
+    <header className="landing-header"><strong className="landing-brand">SIGAD</strong><div className="landing-header-actions"><button type="button" className="landing-button landing-button-secondary" onClick={() => { setApplicationStatus(null); setActiveModal('status'); }}>Consultar solicitud</button><Link to="/login" className="landing-button landing-button-primary">Acceder</Link></div></header>
+    <section className="landing-hero">
+      <div className="landing-hero-copy"><p className="landing-eyebrow">Gestión docente simple y segura</p><h1>Tus cursos, alumnos y asistencias en un solo lugar.</h1><p className="landing-lead">Administra hasta 10 cursos desde cualquier dispositivo. Elige un plan, informa tu pago y solicita tu espacio.</p><button type="button" className="landing-button landing-button-primary" onClick={() => setActiveModal('request')}>Solicitar mi espacio</button></div>
+      <div className="landing-surface landing-hero-image"><img src="/images/sigad-hero.png" alt="Sistema SIGAD en una computadora futurista" /></div>
+    </section>
+    <section className="landing-about" aria-labelledby="landing-about-title">
+      <div><p className="landing-eyebrow">Qué es SIGAD</p><h2 id="landing-about-title">Una herramienta pensada para la tarea docente cotidiana.</h2><p>SIGAD centraliza la gestión académica para que cada docente pueda organizar cursos, registrar alumnos, tomar asistencia y consultar estadísticas desde un único espacio.</p></div>
+      <div className="landing-feature-list"><span>Hasta 10 cursos activos</span><span>Asistencia y estadísticas</span><span>Acceso desde cualquier dispositivo</span></div>
+    </section>
+    <section className="landing-section"><div className="landing-section-heading"><p className="landing-eyebrow">Planes simples</p><h2>Elige el espacio que mejor se adapte a ti</h2><p>Todos los planes incluyen las mismas funciones. Solo cambia el período contratado.</p></div><div className="landing-plan-grid">{plans.map((plan) => <article key={plan.months} className={`landing-plan-card ${selectedPlan.months === plan.months ? 'is-selected' : ''}`}><p className="landing-plan-discount">{plan.discount}</p><h3>{plan.name}</h3><strong>${plan.price.toLocaleString('es-AR')}</strong><p>{plan.detail}</p><button type="button" className="landing-button landing-button-primary" onClick={() => { setSelectedPlan(plan); setActiveModal('request'); }}>Elegir plan</button></article>)}</div></section>
+    <section className="commercial-info" aria-labelledby="commercial-info-title">
+      <h2 id="commercial-info-title">Información útil</h2>
+      <p className="commercial-info-intro">Todo lo importante sobre el servicio, disponible cuando lo necesites.</p>
+      <div className="commercial-info-menu">
+        <button type="button" onClick={() => setActiveModal('info-payment')}><span>Pagos</span><small>Medios y comprobantes</small></button>
+        <button type="button" onClick={() => setActiveModal('info-terms')}><span>Condiciones</span><small>Uso y renovación</small></button>
+        <button type="button" onClick={() => setActiveModal('info-privacy')}><span>Privacidad</span><small>Tratamiento de datos</small></button>
+        <button type="button" onClick={() => setActiveModal('info-contact')}><span>Contacto</span><small>Consultas y soporte</small></button>
       </div>
-    </main>
-  );
+    </section>
+    <footer className="landing-footer"><div><strong>SIGAD</strong><span>Gestión académica para docentes</span></div><a href="mailto:bensadoncelia@gmail.com">bensadoncelia@gmail.com</a><span>© 2026 SIGAD</span></footer>
+    {activeModal === 'request' && <div className="landing-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setActiveModal(null); }}>
+      <section className="landing-modal" role="dialog" aria-modal="true" aria-labelledby="request-modal-title">
+        <div className="landing-modal-header"><div><h2 id="request-modal-title">Solicitar mi espacio</h2><p>Plan seleccionado: <strong>{selectedPlan.name} por ${selectedPlan.price.toLocaleString('es-AR')}</strong></p></div><button type="button" className="landing-modal-close" aria-label="Cerrar solicitud" disabled={saving} onClick={() => setActiveModal(null)}>×</button></div>
+        <form onSubmit={submit} className="landing-modal-form">
+          <label>Nombre y apellido<input style={input} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} disabled={saving} /></label><label>DNI<input style={input} value={form.dni} onChange={(e) => setForm({ ...form, dni: e.target.value })} disabled={saving} /></label><label>Correo electrónico<input style={input} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={saving} /></label><label>Teléfono<input style={input} value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} disabled={saving} /></label><label>Fecha del pago<input style={input} type="date" value={form.fechaPago} onChange={(e) => setForm({ ...form, fechaPago: e.target.value })} disabled={saving} /></label><label>Medio de pago<select style={input} value={form.medioPago} onChange={(e) => setForm({ ...form, medioPago: e.target.value })} disabled={saving}><option value="transferencia">Transferencia</option><option value="deposito">Depósito</option><option value="otro">Otro</option></select></label><label>Número de operación<input style={input} value={form.numeroOperacion} onChange={(e) => setForm({ ...form, numeroOperacion: e.target.value })} disabled={saving} /></label><label>Comprobante<input style={input} type="file" accept="image/jpeg,image/png,application/pdf" onChange={(e) => setForm({ ...form, comprobante: e.target.files?.[0] || null })} disabled={saving} /></label>
+          <label className="landing-modal-consent"><input type="checkbox" checked={form.acepta} onChange={(e) => setForm({ ...form, acepta: e.target.checked })} disabled={saving} /> Declaro que los datos y el comprobante son correctos, y acepto las condiciones del servicio y el tratamiento de datos.</label>
+          <button className="busy-button" style={button} disabled={saving}>{saving && <span className="button-spinner" aria-hidden="true" />}{saving ? 'Enviando...' : 'Enviar solicitud'}</button>
+        </form>
+      </section>
+    </div>}
+    {activeModal === 'status' && <div className="landing-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !checkingStatus) setActiveModal(null); }}>
+      <section className="landing-modal landing-modal-small" role="dialog" aria-modal="true" aria-labelledby="status-modal-title">
+        <div className="landing-modal-header"><div><h2 id="status-modal-title">Consultar mi solicitud</h2><p>Ingresa los mismos datos utilizados al solicitar tu espacio.</p></div><button type="button" className="landing-modal-close" aria-label="Cerrar consulta" disabled={checkingStatus} onClick={() => setActiveModal(null)}>×</button></div>
+        <form onSubmit={checkStatus} className="landing-modal-form landing-status-form">
+          <label>Correo electrónico<input style={input} type="email" value={statusForm.email} onChange={(e) => setStatusForm({ ...statusForm, email: e.target.value })} disabled={checkingStatus} /></label>
+          <label>DNI<input style={input} value={statusForm.dni} onChange={(e) => setStatusForm({ ...statusForm, dni: e.target.value })} disabled={checkingStatus} /></label>
+          <label>Número de operación<input style={input} value={statusForm.numeroOperacion} onChange={(e) => setStatusForm({ ...statusForm, numeroOperacion: e.target.value })} disabled={checkingStatus} /></label>
+          <button className="busy-button" style={button} disabled={checkingStatus}>{checkingStatus && <span className="button-spinner" aria-hidden="true" />}{checkingStatus ? 'Consultando...' : 'Consultar estado'}</button>
+        </form>
+        {applicationStatus && <article className={`public-application-status status-${applicationStatus.estado}`} role="status"><div><small>Estado</small><strong>{statusLabels[applicationStatus.estado] || applicationStatus.estado}</strong></div><div><small>Plan solicitado</small><strong>{planLabels[applicationStatus.meses] || `${applicationStatus.meses} meses`}</strong></div><div><small>Solicitud enviada</small><strong>{new Date(applicationStatus.creadaEn).toLocaleDateString('es-AR')}</strong></div>{applicationStatus.observacionAdmin && <p><strong>Respuesta de administración:</strong> {applicationStatus.observacionAdmin}</p>}</article>}
+      </section>
+    </div>}
+    {activeModal?.startsWith('info-') && <div className="landing-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveModal(null); }}>
+      <section className="landing-modal landing-modal-small commercial-modal" role="dialog" aria-modal="true" aria-labelledby="commercial-modal-title">
+        <div className="landing-modal-header">
+          <div>
+            <p className="commercial-modal-eyebrow">Información de SIGAD</p>
+            <h2 id="commercial-modal-title">{{
+              'info-payment': 'Medios y datos de pago',
+              'info-terms': 'Condiciones del servicio',
+              'info-privacy': 'Privacidad y tratamiento de datos',
+              'info-contact': 'Contacto'
+            }[activeModal]}</h2>
+          </div>
+          <button type="button" className="landing-modal-close" aria-label="Cerrar información" onClick={() => setActiveModal(null)}>×</button>
+        </div>
+        <div className="commercial-modal-content">
+          {activeModal === 'info-payment' && <><p>Se aceptan transferencias y depósitos. Si utilizas otro medio, debes coordinarlo previamente con la administración.</p><p>Los datos de la cuenta de destino se solicitan por correo a <a href="mailto:bensadoncelia@gmail.com">bensadoncelia@gmail.com</a>.</p><p>Para validar el pago deberás informar la fecha, el número de operación y adjuntar un comprobante legible.</p></>}
+          {activeModal === 'info-terms' && <><p>Cada espacio docente permite gestionar hasta 10 cursos activos. La habilitación comienza cuando la administración aprueba el pago.</p><p>La duración corresponde al plan contratado. No hay renovación automática: para continuar, el docente debe informar un nuevo pago.</p><p>Al vencer la suscripción se restringe el acceso a los cursos hasta que la renovación sea aprobada.</p></>}
+          {activeModal === 'info-privacy' && <><p>SIGAD solicita nombre, DNI, correo, teléfono y datos del pago para verificar la solicitud, crear la cuenta y prestar soporte.</p><p>Los comprobantes y datos personales son accesibles únicamente para la administración y no se publican en la consulta de estado.</p><p>Puedes solicitar la actualización o eliminación de tus datos escribiendo al correo de contacto, sujeto a las obligaciones administrativas aplicables.</p></>}
+          {activeModal === 'info-contact' && <><p>Para consultas comerciales, datos de pago, soporte o solicitudes relacionadas con datos personales, escribe a:</p><a className="commercial-contact-link" href="mailto:bensadoncelia@gmail.com">bensadoncelia@gmail.com</a><p>Indica tu nombre y, si ya realizaste un pago, el número de operación.</p></>}
+        </div>
+      </section>
+    </div>}
+  </div></main>;
 }
-
 export default Landing;

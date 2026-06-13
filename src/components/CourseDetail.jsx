@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
+import Swal from 'sweetalert2';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -128,6 +129,7 @@ function CourseDetail({ logout }) {
   const [editingAlumnoId, setEditingAlumnoId] = useState(null);
   const [editFormData, setEditFormData] = useState({ nombre: '', dni: '', email: '' });
   const [diasClase, setDiasClase] = useState([]);
+  const [busyAction, setBusyAction] = useState('');
 
   const ITEMS_PER_PAGE = 7;
   const handleLogout = () => {
@@ -152,7 +154,7 @@ function CourseDetail({ logout }) {
       const alumnosList = await fetchAlumnos();
       setAlumnos(alumnosList);
     } catch (error) {
-      console.log('error al cargar alumnos', error);
+      await Swal.fire('No se pudieron cargar los alumnos', error?.response?.message || 'Intenta nuevamente.', 'error');
     }
   };
 
@@ -162,8 +164,11 @@ function CourseDetail({ logout }) {
     const loadData = async () => {
       try {
         if (!pb?.authStore?.isValid) {
-          console.log('CourseDetail: auth not valid, skipping fetch');
-          if (mounted) setLoading(false);
+          if (mounted) {
+            setLoading(false);
+            await Swal.fire('La sesión venció', 'Vuelve a ingresar para continuar.', 'warning');
+            navigate('/login');
+          }
           return;
         }
 
@@ -180,7 +185,7 @@ function CourseDetail({ logout }) {
         setDiasClase(normalizeDiasClase(courseData?.diasClase));
         setAlumnos(alumnosList);
       } catch (error) {
-        console.log('error al cargar datos del curso', error);
+        if (mounted) await Swal.fire('No se pudo abrir el curso', error?.response?.message || 'El curso no está disponible o no tienes acceso.', 'error');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -193,15 +198,17 @@ function CourseDetail({ logout }) {
     return () => {
       mounted = false;
     };
-  }, [id, fetchAlumnos]);
+  }, [id, fetchAlumnos, navigate]);
 
   const createAlumno = async () => {
+    if (busyAction) return;
     if (!alumnoNombre.trim() || !alumnoDni.trim()) {
-      console.log('Por favor complete nombre y dni del alumno');
+      await Swal.fire('Datos incompletos', 'Completa el nombre y el DNI del alumno.', 'warning');
       return;
     }
 
     try {
+      setBusyAction('createStudent');
       await pb.collection('alumnos').create({
         nombre: alumnoNombre.trim(),
         dni: alumnoDni.trim(),
@@ -214,17 +221,27 @@ function CourseDetail({ logout }) {
       setAlumnoEmail('');
       setShowAlumnoForm(false);
       await loadAlumnos();
+      await Swal.fire('Alumno agregado', 'El alumno quedó registrado en el curso.', 'success');
+      setBusyAction('');
     } catch (error) {
-      console.log('error al crear alumno', error);
+      setBusyAction('');
+      await Swal.fire('No se pudo agregar', error?.response?.data?.dni ? 'Ya existe un alumno con ese DNI en este curso.' : (error?.response?.message || 'Revisa los datos e intenta nuevamente.'), 'error');
     }
   };
 
   const deleteAlumno = async (alumnoId) => {
+    if (busyAction) return;
+    const confirmation = await Swal.fire({ title: '¿Eliminar alumno?', text: 'También se eliminarán sus asistencias asociadas.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Eliminar', cancelButtonText: 'Cancelar' });
+    if (!confirmation.isConfirmed) return;
     try {
+      setBusyAction(`deleteStudent:${alumnoId}`);
       await pb.collection('alumnos').delete(alumnoId, { requestKey: null });
       await loadAlumnos();
+      await Swal.fire('Alumno eliminado', 'El registro fue eliminado correctamente.', 'success');
+      setBusyAction('');
     } catch (error) {
-      console.log('error al eliminar alumno', error);
+      setBusyAction('');
+      await Swal.fire('No se pudo eliminar', error?.response?.message || 'Intenta nuevamente.', 'error');
     }
   };
 
@@ -243,12 +260,14 @@ function CourseDetail({ logout }) {
   };
 
   const saveEditAlumno = async () => {
+    if (busyAction) return;
     if (!editFormData.nombre.trim() || !editFormData.dni.trim()) {
-      console.log('Por favor complete nombre y dni');
+      await Swal.fire('Datos incompletos', 'Completa el nombre y el DNI del alumno.', 'warning');
       return;
     }
 
     try {
+      setBusyAction('editStudent');
       await pb.collection('alumnos').update(editingAlumnoId, {
         nombre: editFormData.nombre.trim(),
         dni: editFormData.dni.trim(),
@@ -257,8 +276,11 @@ function CourseDetail({ logout }) {
 
       cancelEditAlumno();
       await loadAlumnos();
+      await Swal.fire('Alumno actualizado', 'Los cambios se guardaron correctamente.', 'success');
+      setBusyAction('');
     } catch (error) {
-      console.log('error al editar alumno', error);
+      setBusyAction('');
+      await Swal.fire('No se pudo actualizar', error?.response?.data?.dni ? 'Ya existe un alumno con ese DNI en el curso.' : (error?.response?.message || 'Revisa los datos.'), 'error');
     }
   };
 
@@ -274,7 +296,7 @@ function CourseDetail({ logout }) {
 
   if (loading) {
     return (
-      <main style={pageStyles}>
+      <main style={pageStyles} className="app-page">
         <div style={cardStyles}>
           <h1 style={titleStyles}>Detalle del curso</h1>
           <p style={infoTextStyles}>Cargando...</p>
@@ -284,7 +306,13 @@ function CourseDetail({ logout }) {
   }
 
   const handleSave = async () => {
+    if (busyAction) return;
+    if (!name.trim()) {
+      await Swal.fire('Nombre requerido', 'El curso debe tener un nombre.', 'warning');
+      return;
+    }
     try {
+      setBusyAction('course');
       const updatedCourse = await pb.collection('cursos').update(id, {
         nombre: name,
         descripcion: description,
@@ -292,8 +320,11 @@ function CourseDetail({ logout }) {
       }, { requestKey: null });
       setCourse(updatedCourse);
       setEditMode(false);
+      await Swal.fire('Curso actualizado', 'Los cambios se guardaron correctamente.', 'success');
+      setBusyAction('');
     } catch (error) {
-      console.log('error al guardar cambios', error);
+      setBusyAction('');
+      await Swal.fire('No se pudo actualizar el curso', error?.response?.message || 'Revisa los datos e intenta nuevamente.', 'error');
     }
   };
 
@@ -308,7 +339,7 @@ function CourseDetail({ logout }) {
   const diasDisponibles = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
   return (
-    <main style={pageStyles}>
+    <main style={pageStyles} className="app-page course-page">
       <div style={topActionsWrapperStyles}>
         <button className="topActionButton" type="button" onClick={() => navigate('/dashboard')}>
           Volver
@@ -408,8 +439,8 @@ function CourseDetail({ logout }) {
                       ))}
                     </div>
                   </div>
-                  <button style={buttonStyles} type="button" onClick={handleSave}>
-                    Guardar cambios
+                  <button className="busy-button" style={buttonStyles} type="button" onClick={handleSave} disabled={Boolean(busyAction)}>
+                    {busyAction === 'course' && <span className="button-spinner" aria-hidden="true" />}{busyAction === 'course' ? 'Guardando...' : 'Guardar cambios'}
                   </button>
                 </div>
               )}
@@ -469,8 +500,8 @@ function CourseDetail({ logout }) {
                       style={inputStyles}
                     />
                   </label>
-                  <button style={buttonStyles} type="button" onClick={createAlumno}>
-                    Guardar alumno
+                  <button className="busy-button" style={buttonStyles} type="button" onClick={createAlumno} disabled={Boolean(busyAction)}>
+                    {busyAction === 'createStudent' && <span className="button-spinner" aria-hidden="true" />}{busyAction === 'createStudent' ? 'Guardando...' : 'Guardar alumno'}
                   </button>
                 </div>
               )}
@@ -509,8 +540,8 @@ function CourseDetail({ logout }) {
                     <button style={secondaryButtonStyles} type="button" onClick={cancelEditAlumno}>
                       Volver
                     </button>
-                    <button style={buttonStyles} type="button" onClick={saveEditAlumno}>
-                      Guardar edición
+                    <button className="busy-button" style={buttonStyles} type="button" onClick={saveEditAlumno} disabled={Boolean(busyAction)}>
+                      {busyAction === 'editStudent' && <span className="button-spinner" aria-hidden="true" />}{busyAction === 'editStudent' ? 'Guardando...' : 'Guardar edición'}
                     </button>
                   </div>
                 </div>
@@ -553,8 +584,9 @@ function CourseDetail({ logout }) {
                                 type="button"
                                 style={{ ...secondaryButtonStyles, padding: '7px 12px', fontSize: '0.83rem', color: '#ff6b9d' }}
                                 onClick={() => deleteAlumno(alumno.id)}
+                                disabled={Boolean(busyAction)}
                               >
-                                Eliminar
+                                {busyAction === `deleteStudent:${alumno.id}` ? 'Eliminando...' : 'Eliminar'}
                               </button>
                             </div>
                           </td>

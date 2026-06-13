@@ -1,309 +1,255 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const pageStyles = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '24px',
-  background: 'radial-gradient(circle at top left, rgba(91, 45, 255, 0.32), transparent 28%), radial-gradient(circle at bottom right, rgba(255, 66, 164, 0.22), transparent 26%), #07070e',
-  color: '#eef0ff'
+  minHeight: '100vh', padding: '24px', background: '#07070e', color: '#eef0ff'
 };
 
 const panelStyles = {
-  width: '100%',
-  maxWidth: '960px',
-  padding: '32px',
-  borderRadius: '28px',
-  background: 'rgba(15, 18, 33, 0.96)',
-  border: '1px solid rgba(255, 255, 255, 0.08)',
-  boxShadow: '0 30px 70px rgba(0, 0, 0, 0.35)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '28px'
+  width: '100%', maxWidth: '1180px', margin: '0 auto', padding: '30px',
+  borderRadius: '28px', background: 'rgba(15, 18, 33, 0.96)',
+  border: '1px solid rgba(255,255,255,0.08)', boxSizing: 'border-box'
 };
 
-const topActionsWrapperStyles = {
-  width: '100%',
-  maxWidth: '960px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '12px',
-  flexWrap: 'wrap',
-  marginBottom: '18px'
-};
-
-const actionButtonStyles = {
-  border: 'none',
-  borderRadius: '18px',
-  padding: '12px 22px',
-  background: 'linear-gradient(135deg, #8d6bff 0%, #ff3d9b 100%)',
-  color: '#ffffff',
-  fontWeight: 700,
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-  boxShadow: '0 18px 32px rgba(143, 76, 255, 0.22)'
+const buttonStyles = {
+  border: 'none', borderRadius: '16px', padding: '11px 18px', color: '#fff',
+  fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, #8d6bff, #ff3d9b)'
 };
 
 const secondaryButtonStyles = {
-  border: '1px solid rgba(255,255,255,0.14)',
-  borderRadius: '16px',
-  padding: '10px 16px',
-  background: 'rgba(255,255,255,0.05)',
-  color: '#c7d0ff',
-  fontWeight: 600,
-  cursor: 'pointer'
+  border: '1px solid rgba(255,255,255,0.14)', borderRadius: '13px', padding: '8px 12px',
+  background: 'rgba(255,255,255,0.05)', color: '#d7dcff', fontWeight: 600, cursor: 'pointer'
 };
 
-const protectedButtonStyles = {
-  border: '1px solid rgba(255,255,255,0.12)',
-  borderRadius: '16px',
-  padding: '6px 12px',
-  background: 'rgba(255,255,255,0.04)',
-  color: '#9da3bf',
-  fontWeight: 600,
-  fontSize: '0.85rem',
-  cursor: 'not-allowed'
-};
-
-const titleStyles = {
-  margin: 0,
-  fontSize: '2rem',
-  letterSpacing: '0.06em'
-};
-
-const subtitleStyles = {
-  margin: '10px 0 0',
-  color: '#9da3bf',
-  fontSize: '0.95rem'
-};
-
-const tableStyles = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
-  borderRadius: '12px',
-  overflow: 'hidden',
-  background: 'rgba(255,255,255,0.02)',
-  marginTop: '20px'
+const inputStyles = {
+  width: '100%', padding: '11px 13px', borderRadius: '12px',
+  border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)',
+  color: '#eef0ff', boxSizing: 'border-box'
 };
 
 const thStyles = {
-  padding: '14px 16px',
-  textAlign: 'left',
-  color: '#d7dcff',
-  fontWeight: 700,
-  fontSize: '0.95rem',
-  background: 'rgba(255, 255, 255, 0.05)',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+  padding: '12px', textAlign: 'left', color: '#d7dcff', background: 'rgba(255,255,255,0.05)'
 };
 
 const tdStyles = {
-  padding: '14px 16px',
-  color: '#eef0ff',
-  fontSize: '0.95rem',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-  background: 'rgba(18, 24, 51, 0.6)'
+  padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+  background: 'rgba(18,24,51,0.55)', verticalAlign: 'middle'
+};
+
+const emptyForm = {
+  name: '', email: '', dni: '', telefono: '', password: '', suscripcionHasta: ''
 };
 
 function AdminDocentes({ pb, logout }) {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [courseCounts, setCourseCounts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [processingUser, setProcessingUser] = useState('');
+  const [formData, setFormData] = useState(emptyForm);
 
-  const adminValue = pb?.authStore?.model?.administrador || '';
-  const normalizedAdminValue = adminValue.toString().trim().toLowerCase();
+  const isAuthorized = pb?.authStore?.model?.administrador === 'admin';
+  const isAdmin = (user) => user?.administrador === 'admin';
 
-  const isAuthorized =
-    normalizedAdminValue === 'admin' ||
-    normalizedAdminValue === 'administración';
-
-  const isUserAdmin = (user) => {
-    const value = user?.administrador || '';
-    const normalizedValue = value.toString().trim().toLowerCase();
-
-    return normalizedValue === 'admin' || normalizedValue === 'administración';
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadUsers = async () => {
-      if (!isAuthorized) {
-        if (isMounted) {
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const records = await pb.collection('users').getFullList({
-          sort: 'email'
-        });
-
-        if (isMounted) {
-          setUsers(records);
-        }
-      } catch (error) {
-        console.error('Error al cargar docentes:', error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [pb, isAuthorized]);
-
-  const reloadUsers = async () => {
-    try {
-      setLoading(true);
-
-      const records = await pb.collection('users').getFullList({
-        sort: 'email'
-      });
-
-      setUsers(records);
-    } catch (error) {
-      console.error('Error al recargar docentes:', error);
-    } finally {
+  const reloadData = useCallback(async () => {
+    if (!isAuthorized) {
       setLoading(false);
-    }
-  };
-
-  const handleToggleActivo = async (user) => {
-    if (isUserAdmin(user)) {
-      console.log('No se puede desactivar un usuario administrador.');
       return;
     }
 
     try {
-      await pb.collection('users').update(user.id, {
-        activo: !user.activo
+      setLoading(true);
+      const [records, courses] = await Promise.all([
+        pb.collection('users').getFullList({ sort: 'email', requestKey: null }),
+        pb.collection('cursos').getFullList({ requestKey: null })
+      ]);
+      const counts = {};
+      courses.forEach((course) => {
+        if (course.docenteId && !course.archivado) {
+          counts[course.docenteId] = (counts[course.docenteId] || 0) + 1;
+        }
       });
-
-      await reloadUsers();
+      setUsers(records);
+      setCourseCounts(counts);
     } catch (error) {
-      console.error('Error al actualizar estado:', error);
+      console.error('Error al cargar docentes:', error);
+      await Swal.fire('No se pudo cargar', 'Revisa la conexión con PocketBase.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthorized, pb]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(reloadData, 0);
+    return () => window.clearTimeout(timer);
+  }, [reloadData]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleCreate = async (event) => {
+    event.preventDefault();
+    const values = Object.values(formData);
+    if (values.some((value) => !value.trim())) {
+      await Swal.fire('Datos incompletos', 'Completa todos los campos.', 'warning');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await pb.collection('users').create({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        emailVisibility: true,
+        password: formData.password,
+        passwordConfirm: formData.password,
+        dni: formData.dni.trim(),
+        telefono: formData.telefono.trim(),
+        administrador: 'docente',
+        activo: true,
+        suscripcionEstado: 'activo',
+        suscripcionDesde: new Date().toISOString(),
+        suscripcionHasta: `${formData.suscripcionHasta} 23:59:59.000Z`
+      });
+      setFormData(emptyForm);
+      setShowForm(false);
+      await reloadData();
+      await Swal.fire('Docente creado', 'El espacio comercial quedó habilitado.', 'success');
+    } catch (error) {
+      console.error('Error al crear docente:', error);
+      await Swal.fire('No se pudo crear', 'Verifica email, DNI, teléfono y contraseña.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRenew = async (user) => {
+    const { value } = await Swal.fire({
+      title: 'Renovar espacio', input: 'date', inputLabel: 'Nueva fecha de vencimiento',
+      inputValue: user.suscripcionHasta?.slice(0, 10) || '', showCancelButton: true,
+      confirmButtonText: 'Renovar', cancelButtonText: 'Cancelar',
+      inputValidator: (date) => !date && 'Selecciona una fecha.'
+    });
+    if (!value) return;
+
+    try {
+      setProcessingUser(user.id);
+      await pb.collection('users').update(user.id, {
+        activo: true,
+        suscripcionEstado: 'activo',
+        suscripcionHasta: `${value} 23:59:59.000Z`
+      });
+      await reloadData();
+      await Swal.fire('Espacio renovado', 'La nueva vigencia quedó registrada.', 'success');
+    } catch (error) {
+      console.error('Error al renovar:', error);
+      await Swal.fire('No se pudo renovar', 'Intenta nuevamente.', 'error');
+    } finally {
+      setProcessingUser('');
+    }
+  };
+
+  const handleToggle = async (user) => {
+    const activate = !user.activo;
+    try {
+      setProcessingUser(user.id);
+      await pb.collection('users').update(user.id, {
+        activo: activate,
+        suscripcionEstado: activate ? 'activo' : 'suspendido'
+      });
+      await reloadData();
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      await Swal.fire('No se pudo actualizar', 'Intenta nuevamente.', 'error');
+    } finally {
+      setProcessingUser('');
     }
   };
 
   const handleLogout = () => {
-    if (logout) {
-      logout();
-    }
-
+    logout?.();
     navigate('/login');
   };
 
+  const formatDate = (value) => value
+    ? new Date(value).toLocaleDateString('es-AR')
+    : 'Sin vencimiento';
+
   if (!isAuthorized) {
     return (
-      <main style={pageStyles}>
+      <main style={pageStyles} className="app-page">
         <div style={panelStyles}>
-          <h1 style={titleStyles}>Acceso no autorizado</h1>
-          <p style={subtitleStyles}>No tienes los permisos necesarios para ver esta página.</p>
-
-          <button style={{ ...actionButtonStyles, marginTop: '20px' }} type="button" onClick={() => navigate('/dashboard')}>
-            Volver al dashboard
-          </button>
+          <h1>Acceso no autorizado</h1>
+          <button style={buttonStyles} type="button" onClick={() => navigate('/dashboard')}>Volver</button>
         </div>
       </main>
     );
   }
 
   return (
-    <main style={pageStyles}>
-      <div style={topActionsWrapperStyles}>
-        <button style={secondaryButtonStyles} type="button" onClick={() => navigate('/dashboard')}>
-          Volver al dashboard
-        </button>
-
-        <button style={{ ...secondaryButtonStyles, color: '#ff6b9d' }} type="button" onClick={handleLogout}>
-          Salir del sistema
-        </button>
+    <main style={pageStyles} className="app-page admin-teachers-page">
+      <div style={{ ...panelStyles, marginBottom: '18px', display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+        <button style={secondaryButtonStyles} type="button" onClick={() => navigate('/dashboard')}>Volver</button>
+        <button style={{ ...secondaryButtonStyles, color: '#ff8a80' }} type="button" onClick={handleLogout}>Salir</button>
       </div>
 
       <div style={panelStyles}>
-        <header>
-          <h1 style={titleStyles}>Administración de docentes</h1>
-          <p style={subtitleStyles}>Gestiona el acceso de los docentes al sistema.</p>
+        <header style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ margin: 0 }}>Administración de docentes</h1>
+            <p style={{ marginTop: '8px', color: '#9da3bf' }}>Gestiona espacios, vigencias y cupos comerciales.</p>
+          </div>
+          <button style={buttonStyles} type="button" onClick={() => setShowForm((value) => !value)}>
+            {showForm ? 'Cancelar alta' : 'Nuevo docente'}
+          </button>
         </header>
 
-        {loading ? (
-          <p style={{ color: '#9da3bf' }}>Cargando docentes...</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={tableStyles}>
-              <thead>
-                <tr>
-                  <th style={thStyles}>Email</th>
-                  <th style={thStyles}>Nombre</th>
-                  <th style={thStyles}>Activo</th>
-                  <th style={thStyles}>Rol</th>
-                  <th style={thStyles}>Acciones</th>
+        {showForm && (
+          <form onSubmit={handleCreate} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px', marginTop: '24px' }}>
+            <input style={inputStyles} name="name" placeholder="Nombre completo" value={formData.name} onChange={handleChange} />
+            <input style={inputStyles} name="email" type="email" placeholder="Correo electrónico" value={formData.email} onChange={handleChange} />
+            <input style={inputStyles} name="dni" placeholder="DNI" value={formData.dni} onChange={handleChange} />
+            <input style={inputStyles} name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleChange} />
+            <input style={inputStyles} name="password" type="password" placeholder="Contraseña inicial" value={formData.password} onChange={handleChange} />
+            <label style={{ color: '#d7dcff', fontSize: '0.85rem' }}>
+              Vencimiento
+              <input style={{ ...inputStyles, marginTop: '6px' }} name="suscripcionHasta" type="date" value={formData.suscripcionHasta} onChange={handleChange} />
+            </label>
+            <button style={buttonStyles} type="submit" disabled={saving}>{saving ? 'Creando...' : 'Crear y habilitar'}</button>
+          </form>
+        )}
+
+        {loading ? <p style={{ marginTop: '24px' }}>Cargando docentes...</p> : (
+          <div style={{ overflowX: 'auto', marginTop: '24px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+              <thead><tr>
+                <th style={thStyles}>Docente</th><th style={thStyles}>Activo</th>
+                <th style={thStyles}>Suscripción</th><th style={thStyles}>Vencimiento</th>
+                <th style={thStyles}>Cursos</th><th style={thStyles}>Acciones</th>
+              </tr></thead>
+              <tbody>{users.map((user) => (
+                <tr key={user.id}>
+                  <td style={tdStyles}><strong>{user.name || 'Sin nombre'}</strong><br /><small>{user.email}</small></td>
+                  <td style={tdStyles}>{user.activo ? 'Sí' : 'No'}</td>
+                  <td style={tdStyles}>{user.suscripcionEstado || 'Sin definir'}</td>
+                  <td style={tdStyles}>{isAdmin(user) ? 'Exento' : formatDate(user.suscripcionHasta)}</td>
+                  <td style={tdStyles}>{courseCounts[user.id] || 0} / 10</td>
+                  <td style={tdStyles}>{isAdmin(user) ? 'Administrador protegido' : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="busy-button" style={secondaryButtonStyles} type="button" disabled={Boolean(processingUser)} onClick={() => handleRenew(user)}>{processingUser === user.id && <span className="button-spinner" aria-hidden="true" />}{processingUser === user.id ? 'Procesando...' : 'Renovar'}</button>
+                      <button style={{ ...secondaryButtonStyles, color: user.activo ? '#ff8a80' : '#b9f6ca' }} type="button" disabled={Boolean(processingUser)} onClick={() => handleToggle(user)}>
+                        {processingUser === user.id ? 'Espera...' : user.activo ? 'Suspender' : 'Activar'}
+                      </button>
+                    </div>
+                  )}</td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {users.map((user) => {
-                  const userIsAdmin = isUserAdmin(user);
-
-                  return (
-                    <tr key={user.id}>
-                      <td style={tdStyles}>{user.email}</td>
-                      <td style={tdStyles}>{user.name || 'Sin nombre'}</td>
-                      <td style={tdStyles}>
-                        <span
-                          style={{
-                            color: user.activo ? '#4caf50' : '#f44336',
-                            fontWeight: 700
-                          }}
-                        >
-                          {user.activo ? 'Sí' : 'No'}
-                        </span>
-                      </td>
-                      <td style={tdStyles}>{user.administrador || 'Docente'}</td>
-                      <td style={tdStyles}>
-                        {userIsAdmin ? (
-                          <button style={protectedButtonStyles} type="button" disabled>
-                            Administrador protegido
-                          </button>
-                        ) : (
-                          <button
-                            style={{
-                              ...secondaryButtonStyles,
-                              fontSize: '0.85rem',
-                              padding: '6px 12px',
-                              borderColor: user.activo ? 'rgba(244, 67, 54, 0.4)' : 'rgba(76, 175, 80, 0.4)',
-                              color: user.activo ? '#ff8a80' : '#b9f6ca'
-                            }}
-                            type="button"
-                            onClick={() => handleToggleActivo(user)}
-                          >
-                            {user.activo ? 'Desactivar' : 'Activar'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
+              ))}</tbody>
             </table>
-
-            {users.length === 0 && (
-              <p style={{ color: '#9da3bf', marginTop: '18px' }}>
-                No hay docentes cargados.
-              </p>
-            )}
           </div>
         )}
       </div>

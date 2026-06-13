@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import Swal from 'sweetalert2';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -254,6 +255,8 @@ function AttendanceSheet({ logout }) {
   const [loading, setLoading] = useState(true);
   const [asistencias, setAsistencias] = useState({});
   const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
   
   // Obtener mes actual en formato YYYY-MM
   const hoy = new Date();
@@ -385,7 +388,7 @@ function AttendanceSheet({ logout }) {
       const fileName = `Planilla_${course.nombre}_${mesSeleccionado}.pdf`;
       doc.save(fileName);
     } catch (error) {
-      console.error('Error al generar PDF:', error);
+      Swal.fire('No se pudo generar el informe', error?.message || 'Intenta nuevamente.', 'error');
     }
   };
 
@@ -402,6 +405,7 @@ function AttendanceSheet({ logout }) {
   };
 
   const handleSaveAsistencias = async () => {
+    if (saving || loadingAttendance) return;
     // Recolectar asistencias marcadas
     const asistenciasAGuardar = [];
     
@@ -421,45 +425,36 @@ function AttendanceSheet({ logout }) {
 
     // Validar que hay algo para guardar
     if (asistenciasAGuardar.length === 0) {
-      console.log('No hay asistencias marcadas para guardar.');
+      await Swal.fire('Sin asistencias marcadas', 'Marca al menos una asistencia antes de guardar.', 'info');
       return;
     }
 
-    console.log('Iniciando guardado de', asistenciasAGuardar.length, 'asistencias');
-    console.log('Datos a guardar:', asistenciasAGuardar);
-
     try {
+      setSaving(true);
       // Procesar cada asistencia (crear o actualizar)
       for (const asistencia of asistenciasAGuardar) {
         const estadoConvertido = estadoParaPocketBase[asistencia.estado];
 
         // Validar que el estado exista en PocketBase
         if (!estadoConvertido) {
-          console.log('Estado no válido:', asistencia.estado);
           continue;
         }
 
         // Buscar si ya existe un registro para este alumno/fecha/curso
         // Usar rango de fecha para evitar problemas con hora interna
         const siguienteFecha = getNextDateISO(asistencia.fecha);
-        console.log('Buscando asistencia con filtro:', `cursoId = "${id}" && alumnoId = "${asistencia.alumnoId}" && fecha >= "${asistencia.fecha}" && fecha < "${siguienteFecha}"`);
-        
         const existentes = await pb.collection('asistencias').getFullList({
           filter: `cursoId = "${id}" && alumnoId = "${asistencia.alumnoId}" && fecha >= "${asistencia.fecha}" && fecha < "${siguienteFecha}"`,
           requestKey: null
         });
 
-        console.log('Registros encontrados:', existentes.length);
-
         if (existentes.length > 0) {
           // Actualizar registro existente
-          console.log('Actualizando asistencia:', existentes[0].id);
           await pb.collection('asistencias').update(existentes[0].id, {
             estado: estadoConvertido
           }, { requestKey: null });
         } else {
           // Crear registro nuevo
-          console.log('Creando nueva asistencia:', { cursoId: id, alumnoId: asistencia.alumnoId, fecha: asistencia.fecha, estado: estadoConvertido });
           await pb.collection('asistencias').create({
             cursoId: id,
             alumnoId: asistencia.alumnoId,
@@ -469,16 +464,18 @@ function AttendanceSheet({ logout }) {
         }
       }
 
-      console.log('Asistencia guardada correctamente.');
+      await Swal.fire('Asistencias guardadas', `Se guardaron ${asistenciasAGuardar.length} registros correctamente.`, 'success');
     } catch (error) {
-      console.error('Error al guardar asistencia:', error);
-      console.error('Detalles del error:', error.message, error.response?.data);
+      await Swal.fire('No se pudieron guardar las asistencias', error?.response?.message || 'Algunos registros pueden no haberse guardado. Revisa la conexión e intenta nuevamente.', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        setLoadingAttendance(true);
         const [courseData, alumnosList] = await Promise.all([
           pb.collection('cursos').getOne(id, { requestKey: null }),
           pb.collection('alumnos').getFullList({
@@ -490,7 +487,7 @@ function AttendanceSheet({ logout }) {
         setCourse(courseData);
         setAlumnos(alumnosList);
       } catch (error) {
-        console.log('Error al cargar datos de asistencia:', error);
+        await Swal.fire('No se pudo cargar la planilla', error?.response?.message || 'El curso no está disponible o no tienes acceso.', 'error');
       } finally {
         setLoading(false);
       }
@@ -526,7 +523,9 @@ function AttendanceSheet({ logout }) {
 
         setAsistencias(nuevasAsistencias);
       } catch (error) {
-        console.error('Error al cargar asistencias existentes:', error);
+        await Swal.fire('No se pudieron cargar las asistencias', error?.response?.message || 'Intenta nuevamente.', 'error');
+      } finally {
+        setLoadingAttendance(false);
       }
     };
 
@@ -540,7 +539,7 @@ function AttendanceSheet({ logout }) {
 
   if (loading) {
     return (
-      <main style={pageStyles}>
+      <main style={pageStyles} className="app-page">
         <div style={cardStyles}>
           <h1 style={titleStyles}>Planilla de asistencia</h1>
           <p style={placeholderTextStyles}>Cargando...</p>
@@ -552,7 +551,7 @@ function AttendanceSheet({ logout }) {
   // Si el curso no tiene días de clase configurados
   if (!course || !diasClase.length) {
     return (
-      <main style={pageStyles}>
+      <main style={pageStyles} className="app-page">
         <div style={topActionsWrapperStyles}>
           <button 
             style={secondaryButtonStyles}
@@ -591,7 +590,7 @@ function AttendanceSheet({ logout }) {
   // Si no hay alumnos
   if (!alumnos.length) {
     return (
-      <main style={pageStyles}>
+      <main style={pageStyles} className="app-page">
         <div style={topActionsWrapperStyles}>
           <button 
             style={secondaryButtonStyles}
@@ -628,7 +627,7 @@ function AttendanceSheet({ logout }) {
   }
 
   return (
-    <main style={pageStyles}>
+    <main className="attendance-page app-page" style={pageStyles}>
       <div style={topActionsWrapperStyles}>
         <button 
           style={secondaryButtonStyles}
@@ -646,13 +645,13 @@ function AttendanceSheet({ logout }) {
         </button>
       </div>
 
-      <div style={cardStyles}>
+      <div className="attendance-panel" style={cardStyles}>
         <header>
           <h1 style={titleStyles}>Planilla de asistencia</h1>
           <p style={subtitleStyles}>Gestión de asistencia del curso</p>
         </header>
 
-        <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+        <div className="attendance-course-info" style={{ display: 'flex', gap: '16px', width: '100%' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={infoBoxStyles}>
               <p style={infoLabelStyles}>Curso</p>
@@ -769,7 +768,9 @@ function AttendanceSheet({ logout }) {
           </div>
         )}
 
-        <div style={tableContainerStyles}>
+        {loadingAttendance && <div className="inline-loading"><span className="button-spinner" aria-hidden="true" />Cargando asistencias...</div>}
+
+        <div className="attendance-desktop" style={tableContainerStyles}>
           <table style={tableStyles}>
             <thead>
               <tr>
@@ -801,6 +802,7 @@ function AttendanceSheet({ logout }) {
                           <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                             <button
                               type="button"
+                              disabled={saving || loadingAttendance}
                               onClick={() => marcarAsistencia(alumno.id, fecha.fechaISO, 'presente')}
                               style={{
                                 padding: '4px 8px',
@@ -817,6 +819,7 @@ function AttendanceSheet({ logout }) {
                             </button>
                             <button
                               type="button"
+                              disabled={saving || loadingAttendance}
                               onClick={() => marcarAsistencia(alumno.id, fecha.fechaISO, 'ausente')}
                               style={{
                                 padding: '4px 8px',
@@ -833,6 +836,7 @@ function AttendanceSheet({ logout }) {
                             </button>
                             <button
                               type="button"
+                              disabled={saving || loadingAttendance}
                               onClick={() => marcarAsistencia(alumno.id, fecha.fechaISO, 'tardanza')}
                               style={{
                                 padding: '4px 8px',
@@ -868,13 +872,37 @@ function AttendanceSheet({ logout }) {
           </table>
         </div>
 
+        <div className="attendance-mobile">
+          {alumnos.map((alumno) => {
+            const totals = calcularTotalesAlumno(alumno.id);
+            return <article className="attendance-student-card" key={alumno.id}>
+              <header><div><strong>{alumno.nombre}</strong><small>DNI: {alumno.dni || '-'}</small></div><span>P {totals.p} · A {totals.a} · T {totals.t}</span></header>
+              <div className="attendance-date-list">
+                {fechasDelMes.map((fecha) => {
+                  const key = `${alumno.id}_${fecha.fechaISO}`;
+                  const status = asistencias[key];
+                  return <div className="attendance-date-row" key={fecha.fechaISO}>
+                    <span>{fecha.etiqueta}</span>
+                    <div className="attendance-state-buttons">
+                      <button type="button" disabled={saving || loadingAttendance} aria-label={`Presente, ${alumno.nombre}, ${fecha.etiqueta}`} className={status === 'presente' ? 'is-present' : ''} onClick={() => marcarAsistencia(alumno.id, fecha.fechaISO, 'presente')}>P</button>
+                      <button type="button" disabled={saving || loadingAttendance} aria-label={`Ausente, ${alumno.nombre}, ${fecha.etiqueta}`} className={status === 'ausente' ? 'is-absent' : ''} onClick={() => marcarAsistencia(alumno.id, fecha.fechaISO, 'ausente')}>A</button>
+                      <button type="button" disabled={saving || loadingAttendance} aria-label={`Tardanza, ${alumno.nombre}, ${fecha.etiqueta}`} className={status === 'tardanza' ? 'is-late' : ''} onClick={() => marcarAsistencia(alumno.id, fecha.fechaISO, 'tardanza')}>T</button>
+                    </div>
+                  </div>;
+                })}
+              </div>
+            </article>;
+          })}
+        </div>
+
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-          <button 
+          <button className="busy-button"
             style={secondaryButtonStyles}
             type="button" 
             onClick={handleSaveAsistencias}
+            disabled={saving || loadingAttendance}
           >
-            Guardar asistencia
+            {saving && <span className="button-spinner" aria-hidden="true" />}{saving ? 'Guardando...' : 'Guardar asistencia'}
           </button>
         </div>
       </div>
