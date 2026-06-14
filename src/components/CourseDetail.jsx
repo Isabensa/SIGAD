@@ -341,7 +341,7 @@ function CourseDetail({ logout }) {
 
   return (
     <main style={pageStyles} className="app-page course-page">
-      <div style={topActionsWrapperStyles}>
+      <div className="mobile-page-nav" style={topActionsWrapperStyles}>
         <button className="topActionButton" type="button" onClick={() => navigate('/dashboard')}>
           Volver
         </button>
@@ -353,7 +353,7 @@ function CourseDetail({ logout }) {
         {course ? (
           <>
             <div style={{ padding: '24px', borderRadius: '20px', background: 'rgba(15, 18, 33, 0.96)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <header style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+              <header className="course-heading" style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
                   <h1 style={{ ...titleStyles, fontSize: '1.6rem', marginBottom: '8px' }}>Detalle del curso</h1>
                   <p style={subtitleStyles}>Revisa y edita los datos del curso.</p>

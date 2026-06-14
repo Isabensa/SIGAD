@@ -629,7 +629,7 @@ function AttendanceSheet({ logout }) {
 
   return (
     <main className="attendance-page app-page" style={pageStyles}>
-      <div style={topActionsWrapperStyles}>
+      <div className="mobile-page-nav" style={topActionsWrapperStyles}>
         <button 
           style={secondaryButtonStyles}
           type="button" 
@@ -873,6 +873,7 @@ function AttendanceSheet({ logout }) {
           </table>
         </div>
 
+        <p className="attendance-mobile-hint">Desliza hacia los lados para cambiar de alumno.</p>
         <div className="attendance-mobile">
           {alumnos.map((alumno) => {
             const totals = calcularTotalesAlumno(alumno.id);

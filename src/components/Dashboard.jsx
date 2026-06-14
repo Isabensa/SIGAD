@@ -372,7 +372,7 @@ function Dashboard({ pb, logout }) {
 
   return (
     <main style={pageStyles} className="app-page dashboard-page">
-      <div style={topActionsWrapperStyles}>
+      <div className="mobile-page-nav" style={topActionsWrapperStyles}>
         <button className="topActionButton" type="button" onClick={handleGoBack}>
           Volver
         </button>
@@ -389,7 +389,7 @@ function Dashboard({ pb, logout }) {
             <p style={subtitleStyles}>Bienvenido docente, gestiona tus cursos con una interfaz moderna.</p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="dashboard-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {isAdmin && (
               <>
                 <button style={actionButtonStyles} type="button" onClick={handleAdminDocentes}>Administrar docentes</button>
