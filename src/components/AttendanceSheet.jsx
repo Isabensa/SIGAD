@@ -734,7 +734,8 @@ function AttendanceSheet({ logout }) {
         </div>
 
         {mostrarEstadisticas && (
-          <div style={tableContainerStyles}>
+          <>
+          <div className="attendance-stats-table" style={tableContainerStyles}>
             <table style={tableStyles}>
               <thead>
                 <tr>
@@ -767,6 +768,21 @@ function AttendanceSheet({ logout }) {
               </tbody>
             </table>
           </div>
+          <div className="attendance-stats-mobile">
+            {alumnos.map((alumno, index) => {
+              const stats = calcularEstadisticas(alumno.id);
+              return <article className="attendance-stats-card" key={alumno.id}>
+                <header><span>{index + 1}</span><div><strong>{alumno.nombre}</strong><small>DNI: {alumno.dni || '-'}</small></div><b>{stats.porcentaje}%</b></header>
+                <div className="attendance-stats-values">
+                  <span className="is-present"><small>Presentes</small><strong>{stats.p}</strong></span>
+                  <span className="is-absent"><small>Ausentes</small><strong>{stats.a}</strong></span>
+                  <span className="is-late"><small>Tardanzas</small><strong>{stats.t}</strong></span>
+                  <span><small>Clases</small><strong>{fechasDelMes.length}</strong></span>
+                </div>
+              </article>;
+            })}
+          </div>
+          </>
         )}
 
         {loadingAttendance && <div className="inline-loading"><span className="button-spinner" aria-hidden="true" />Cargando asistencias...</div>}

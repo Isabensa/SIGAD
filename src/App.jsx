@@ -119,6 +119,7 @@ const errorStyles = {
 function LoginPage({ pb, onAuthSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
   const navigate = useNavigate();
@@ -201,15 +202,30 @@ function LoginPage({ pb, onAuthSuccess }) {
             <label htmlFor="password" style={labelStyles}>
               Contraseña
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              style={inputStyles}
-            />
+            <div className="password-input-wrapper">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                style={inputStyles}
+              />
+              <button
+                type="button"
+                className="password-visibility-button"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.7a2 2 0 0 0 2.7 2.7M9.9 4.2A10.8 10.8 0 0 1 12 4c5.5 0 9.5 5.3 9.5 5.3a14.4 14.4 0 0 1-3.1 3.7M6.6 6.6C4.1 8.2 2.5 10.7 2.5 10.7S6.5 16 12 16c1 0 2-.2 2.9-.5" /></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6.5 6.7 12 6.7 21.5 12 21.5 12 17.5 17.3 12 17.3 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="2.6" /></svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {loginError && (
