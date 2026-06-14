@@ -4,6 +4,7 @@ import PocketBase from 'pocketbase';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Swal from 'sweetalert2';
+import { formatDayList } from '../utils/dayNames';
 
 const pbUrl = import.meta.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
 const pb = new PocketBase(pbUrl);
@@ -214,7 +215,7 @@ const generarFechasDelMes = (mesStr, diasClase) => {
   const [anio, mes] = mesStr.split('-').map(Number);
   const diasSemana = diasClase.map(d => diaAnumero(d)).filter(n => n >= 0);
   const fechas = [];
-  const nombresDias = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+  const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   const diasEnMes = new Date(anio, mes, 0).getDate();
   for (let dia = 1; dia <= diasEnMes; dia++) {
@@ -312,7 +313,7 @@ function AttendanceSheet({ logout }) {
       yPosition += 6;
       doc.text(`Mes: ${mesSeleccionado}`, 15, yPosition);
       yPosition += 6;
-      doc.text(`Días de clase: ${diasClase.join(', ')}`, 15, yPosition);
+      doc.text(`Días de clase: ${formatDayList(diasClase)}`, 15, yPosition);
       yPosition += 6;
       doc.text(`Total de clases del mes: ${fechasDelMes.length}`, 15, yPosition);
       yPosition += 10;
@@ -662,7 +663,7 @@ function AttendanceSheet({ logout }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={infoBoxStyles}>
               <p style={infoLabelStyles}>Días de clase</p>
-              <p style={infoValueStyles}>{diasClase.join(', ')}</p>
+              <p style={infoValueStyles}>{formatDayList(diasClase)}</p>
             </div>
           </div>
         </div>

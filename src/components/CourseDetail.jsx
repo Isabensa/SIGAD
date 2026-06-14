@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 import Swal from 'sweetalert2';
+import { formatDayList, formatDayName } from '../utils/dayNames';
 
 const pbUrl = import.meta.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
 const pb = new PocketBase(pbUrl);
@@ -381,7 +382,7 @@ function CourseDetail({ logout }) {
                     <p style={{ margin: '0 0 10px', color: '#d7dcff', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.78rem', fontWeight: 700 }}>Días de clase</p>
                     <p style={{ margin: 0, color: '#e8ebff', fontSize: '0.95rem', lineHeight: 1.6 }}>
                       {normalizeDiasClase(course?.diasClase).length > 0
-                        ? normalizeDiasClase(course?.diasClase).join(', ')
+                        ? formatDayList(normalizeDiasClase(course?.diasClase))
                         : 'No configurados'}
                     </p>
                   </div>
@@ -435,7 +436,7 @@ function CourseDetail({ logout }) {
                             transition: 'all 0.2s ease',
                           }}
                         >
-                          {dia}
+                          {formatDayName(dia)}
                         </button>
                       ))}
                     </div>

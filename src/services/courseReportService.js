@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatDayList } from '../utils/dayNames';
 
 const sanitizeFileName = (value) => value.replace(/[\\/:*?"<>|]/g, '-');
 
@@ -38,7 +39,7 @@ export async function exportCourseReport(pb, course) {
   doc.text(`Escuela: ${course.escuela || '-'}`, 14, 31);
   doc.text(`Año: ${course.anio || '-'}`, 14, 37);
   doc.text(`Docente: ${teacherName}`, 14, 43);
-  doc.text(`Días de clase: ${(course.diasClase || []).join(', ') || '-'}`, 14, 49);
+  doc.text(`Días de clase: ${formatDayList(course.diasClase || []) || '-'}`, 14, 49);
   doc.text(`Generado: ${new Date().toLocaleString('es-AR')}`, 14, 55);
 
   const summaryRows = students.map((student, index) => {

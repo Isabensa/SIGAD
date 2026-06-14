@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { getCourses, createCourse, archiveCourse, restoreCourse, permanentlyDeleteCourse } from '../services/courseService';
 import { exportCourseReport } from '../services/courseReportService';
 import { getSubscriptionExpiryNotice } from '../utils/subscription';
+import { formatDayName } from '../utils/dayNames';
 
 const pageStyles = {
   minHeight: '100vh',
@@ -386,7 +387,7 @@ function Dashboard({ pb, logout }) {
         <div style={rowStyles}>
           <div>
             <h1 style={titleStyles}>Dashboard SIGAD</h1>
-            <p style={subtitleStyles}>Bienvenido docente, gestiona tus cursos con una interfaz moderna.</p>
+            <p style={subtitleStyles}>Bienvenido, docente. Gestiona tus cursos con una interfaz moderna.</p>
           </div>
 
           <div className="dashboard-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -519,7 +520,7 @@ function Dashboard({ pb, logout }) {
                           transition: 'all 0.2s ease'
                         }}
                       >
-                        {dia}
+                        {formatDayName(dia)}
                       </button>
                     ))}
                   </div>
