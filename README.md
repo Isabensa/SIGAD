@@ -1,112 +1,81 @@
 # S.I.G.A.D.
 
-**Sistema Integral de Gestion de Asistencia Docente**
+## Sistema Integral de Gestión de Asistencia Docente
 
-Aplicacion web para que docentes administren sus cursos, alumnos y asistencias desde un espacio propio. El sistema esta planteado como un servicio comercial: cada docente contrata un plan, presenta su comprobante de pago y, una vez aprobada la solicitud, puede gestionar hasta 10 cursos.
+S.I.G.A.D. es una aplicación web destinada a la administración de cursos, alumnos y asistencias docentes. El sistema permite centralizar información académica, consultar estadísticas y generar informes, diferenciando las operaciones disponibles según el rol de cada usuario.
 
-<p align="center">
-  <img src="./docs/images/landing.png" alt="Pagina principal de SIGAD" width="900">
-</p>
+### Acceso público
 
-## Descripcion
+- **Aplicación web:** [https://sigad.vercel.app](https://sigad.vercel.app)
+- **Backend PocketBase:** [https://sigad-demo.pockethost.io](https://sigad-demo.pockethost.io)
 
-S.I.G.A.D. centraliza la gestion cotidiana de la asistencia docente y separa claramente las responsabilidades de cada usuario:
+## Problema abordado
 
-- Cada docente crea y administra solamente sus propios cursos.
-- Cada cuenta docente puede tener hasta 10 cursos activos.
-- El administrador supervisa el sistema, los docentes, pagos y solicitudes.
-- El administrador tambien puede utilizar la aplicacion como docente y crear sus propios cursos.
-- Antes de eliminar un curso se genera un informe con sus datos.
-- Las personas interesadas pueden solicitar el servicio y consultar publicamente el estado de su solicitud.
+El registro manual o distribuido de cursos, estudiantes y asistencias dificulta el seguimiento de la actividad docente, la consulta de estadísticas y la elaboración de informes. S.I.G.A.D. reúne estas tareas en una única plataforma accesible desde computadoras y dispositivos móviles.
 
-## Problema que resuelve
+El proyecto también contempla un modelo de servicio comercial: cada docente puede solicitar una cuenta, presentar un comprobante de pago y administrar hasta diez cursos propios durante el período de vigencia de su suscripción.
 
-El registro manual o disperso de cursos, alumnos y asistencias dificulta el seguimiento docente, la consulta de estadisticas y la generacion de informes. S.I.G.A.D. concentra esas tareas en una aplicacion accesible desde computadora o celular, con informacion separada por docente y supervision administrativa.
+## Usuarios y roles
 
-## Usuarios
+### Docente
 
-- **Docente:** administra su perfil, sus pagos y hasta 10 cursos propios con sus alumnos y asistencias.
-- **Administrador:** supervisa todos los cursos, administra docentes y revisa solicitudes y pagos. Tambien puede utilizar sus propios cursos como docente.
-- **Solicitante publico:** conoce los planes, envia una solicitud con comprobante y consulta su estado sin ingresar al panel privado.
+- Gestiona únicamente sus cursos.
+- Puede crear hasta diez cursos activos.
+- Administra alumnos y registros de asistencia.
+- Consulta estadísticas y exporta informes en PDF.
+- Actualiza su perfil y gestiona la renovación del servicio.
+
+### Administrador
+
+- Visualiza y supervisa todos los cursos.
+- Administra las cuentas docentes.
+- Activa o desactiva usuarios.
+- Revisa solicitudes, pagos y comprobantes.
+- Aprueba o rechaza solicitudes y renovaciones.
+- También puede gestionar sus propios cursos como docente.
+
+### Solicitante público
+
+- Consulta los planes disponibles.
+- Envía una solicitud de acceso con su comprobante.
+- Consulta posteriormente el estado de la solicitud.
 
 ## Funcionalidades principales
 
-### Gestion docente
+- Inicio y cierre de sesión.
+- Recuperación y cambio de contraseña.
+- Control de acceso mediante roles de administrador y docente.
+- Gestión de cursos propios con un límite de diez por docente.
+- Alta, edición y eliminación de alumnos.
+- Registro de asistencia como Presente, Ausente o Tardanza.
+- Consulta de estadísticas de asistencia.
+- Exportación de planillas e informes en formato PDF.
+- Generación de un informe antes de eliminar un curso.
+- Administración de docentes y suscripciones.
+- Presentación y revisión de pagos y solicitudes.
+- Consulta pública del estado de una solicitud.
+- Avisos anticipados de vencimiento.
+- Interfaz adaptable a computadoras y teléfonos celulares.
 
-- Inicio de sesion y cierre de sesion.
-- Recuperacion y cambio de contrasena.
-- Perfil del docente.
-- Creacion, edicion y administracion de cursos propios.
-- Limite de 10 cursos por docente.
-- Alta, edicion y baja de alumnos.
-- Registro de asistencias por fecha.
-- Interfaz de asistencias adaptada a celulares.
-- Confirmaciones visibles, indicadores de carga y mensajes de error claros.
-- Avisos anticipados de vencimiento de la suscripcion.
-- Exportacion del informe completo antes de eliminar un curso.
+## Tecnologías utilizadas
 
-### Administracion
+- **React:** construcción de la interfaz de usuario.
+- **Vite:** entorno de desarrollo y compilación del frontend.
+- **React Router:** navegación de la aplicación SPA.
+- **PocketBase:** autenticación, base de datos, archivos y API.
+- **Vercel:** alojamiento y publicación del frontend.
+- **PocketHost:** alojamiento del backend PocketBase.
+- **SweetAlert2:** mensajes, alertas y confirmaciones.
+- **jsPDF y jsPDF AutoTable:** generación de informes PDF.
+- **CSS:** diseño visual y adaptación responsiva.
 
-- Visualizacion y administracion de todos los cursos.
-- Gestion de cuentas docentes.
-- Revision de comprobantes de pago.
-- Aprobacion o rechazo de pagos y solicitudes.
-- Activacion y control de suscripciones.
-- Seguimiento general del uso del sistema.
+## Arquitectura y despliegue
 
-### Experiencia comercial
+El frontend es una aplicación SPA desarrollada con React y publicada en Vercel. Las rutas internas son redirigidas a `index.html` mediante `vercel.json`, lo que permite recargar pantallas como `/dashboard` sin obtener errores 404.
 
-- Landing publica con descripcion del servicio.
-- Plan mensual: **$10.000**.
-- Plan cuatrimestral: **$36.000**.
-- Plan anual: **$96.000**.
-- Formulario publico de solicitud con carga de comprobante.
-- Consulta publica del avance de una solicitud.
-- Informacion sobre medios de pago, condiciones, privacidad y contacto.
+El backend está implementado con PocketBase y desplegado en PocketHost. La dirección del servicio se configura mediante la variable de entorno `VITE_POCKETBASE_URL`.
 
-## Capturas
-
-### Pagina principal
-
-<p align="center">
-  <img src="./docs/images/landing.png" alt="Landing con presentacion y planes" width="900">
-</p>
-
-### Acceso docente
-
-<p align="center">
-  <img src="./docs/images/login.png" alt="Pantalla de inicio de sesion" width="900">
-</p>
-
-> Las pantallas internas requieren una cuenta autorizada y datos locales de PocketBase.
-
-## Tecnologias
-
-- **Frontend:** React 19, React Router y Vite.
-- **Backend:** PocketBase.
-- **Base de datos:** SQLite, administrada por PocketBase.
-- **Alertas y confirmaciones:** SweetAlert2.
-- **Informes:** jsPDF y jsPDF AutoTable.
-- **Estilos:** CSS responsivo propio.
-
-## Uso de inteligencia artificial
-
-Se utilizaron herramientas de inteligencia artificial como apoyo durante la ideacion, el analisis de requisitos, la revision de codigo, la mejora de la experiencia de usuario y la preparacion de documentacion. Las decisiones funcionales, las pruebas y la validacion final fueron realizadas por la responsable del proyecto. La aplicacion no depende de un servicio de IA para funcionar en tiempo de ejecucion.
-
-## Estructura local
-
-El proyecto se ejecuta mediante dos servicios:
-
-```text
-SIGAD/
-|-- SIGAD-frontend/       # Aplicacion React
-|-- pocketbase/           # Backend local
-    |-- pb_hooks/         # Reglas y logica del servidor
-    |-- pb_migrations/    # Estructura versionada de la base de datos
-    |-- pb_data/          # Datos locales, no deben publicarse
-```
-
-Colecciones principales de PocketBase:
+Colecciones principales:
 
 - `users`
 - `cursos`
@@ -115,112 +84,133 @@ Colecciones principales de PocketBase:
 - `pagos`
 - `solicitudes`
 
-## Requisitos
+## Instalación local
+
+### Requisitos
 
 - Node.js 20 o superior.
 - npm.
-- PocketBase para Windows incluido en la carpeta local `pocketbase`.
+- Acceso al backend configurado en PocketHost o a una instancia local de PocketBase.
 
-## Ejecucion local
+### Pasos
 
-### 1. Iniciar PocketBase
+1. Clonar el repositorio y abrir la carpeta `SIGAD-frontend`.
+2. Instalar las dependencias:
 
-Desde la carpeta `pocketbase`:
-
-```powershell
-.\pocketbase.exe serve
+```bash
+npm install
 ```
 
-PocketBase quedara disponible normalmente en:
+3. Crear un archivo `.env` local con la dirección del backend:
 
-- Aplicacion/API: `http://127.0.0.1:8090`
-- Administracion: `http://127.0.0.1:8090/_/`
+```env
+VITE_POCKETBASE_URL=https://sigad-demo.pockethost.io
+```
 
-### 2. Iniciar el frontend
+4. Iniciar el entorno de desarrollo:
 
-Desde la carpeta `SIGAD-frontend`:
-
-```powershell
-npm install
+```bash
 npm run dev
 ```
 
-La aplicacion quedara disponible normalmente en `http://localhost:5173`.
+La aplicación estará disponible normalmente en `http://localhost:5173`.
 
-### 3. Configurar la direccion de PocketBase
-
-La aplicacion utiliza la variable `VITE_POCKETBASE_URL`. Para desarrollo local se puede copiar `.env.example` como `.env`:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Contenido esperado:
-
-```env
-VITE_POCKETBASE_URL=http://127.0.0.1:8090
-```
-
-Si la variable no esta definida, la aplicacion mantiene automaticamente `http://127.0.0.1:8090` como valor local. Para produccion se debe reemplazar por la URL publica con HTTPS antes de compilar.
+El archivo `.env` contiene configuración local y no debe incorporarse al repositorio. El proyecto incluye `.env.example` como referencia, sin credenciales privadas.
 
 ## Comandos disponibles
 
-```powershell
+```bash
 npm run dev      # Inicia el entorno de desarrollo
-npm run build    # Genera la version lista para publicar
-npm run lint     # Revisa la calidad del codigo
-npm run preview  # Previsualiza localmente la compilacion
+npm run build    # Genera la versión de producción
+npm run lint     # Ejecuta el análisis estático
+npm run preview  # Previsualiza la compilación
 ```
 
-## Roles y permisos
+## Capturas de pantalla
 
-| Funcion | Docente | Administrador |
-|---|:---:|:---:|
-| Ver sus propios cursos | Si | Si |
-| Crear hasta 10 cursos propios | Si | Si |
-| Administrar cursos de otros docentes | No | Si |
-| Gestionar alumnos y asistencias propias | Si | Si |
-| Gestionar docentes | No | Si |
-| Revisar pagos y solicitudes | No | Si |
-| Activar suscripciones | No | Si |
+### Página principal
 
-## Seguridad y datos
+<img src="documentos/capturas/landing.png" alt="Página principal" width="650">
 
-- No se deben subir a GitHub `pb_data`, copias de seguridad, comprobantes reales, ejecutables de PocketBase ni credenciales.
-- Las reglas de acceso de PocketBase deben mantenerse activas para impedir que un docente consulte datos ajenos.
-- En produccion se debe utilizar HTTPS, una cuenta administradora segura y copias de respaldo externas.
-- La recuperacion de contrasena requiere configurar un servidor de correo SMTP en PocketBase.
-- Los datos personales y comprobantes deben tratarse de acuerdo con la politica de privacidad publicada en la aplicacion.
+### Inicio de sesión
 
-## Estado del proyecto
+<img src="documentos/capturas/login.png" alt="Inicio de sesión" width="650">
 
-La experiencia funcional y visual principal esta implementada. Actualmente estan disponibles autenticacion, perfiles, administracion de docentes, cursos, alumnos, asistencias P/A/T, estadisticas, informes PDF, planes, pagos, solicitudes publicas y consulta de estado.
+### Dashboard administrador
 
-La lista de comprobaciones para la entrega se encuentra en [TESTING.md](TESTING.md). Los pendientes academicos y las mejoras posteriores estan separados en el archivo `PENDIENTES.md` de la carpeta principal del proyecto.
+<img src="documentos/capturas/dashboard-admin.png" alt="Dashboard administrador" width="650">
+
+### Administración de docentes
+
+<img src="documentos/capturas/admin-docentes.png" alt="Administración de docentes" width="650">
+
+### Revisión de pagos y solicitudes
+
+<img src="documentos/capturas/revision-pagos.png" alt="Revisión de pagos y solicitudes" width="650">
+
+### Dashboard docente
+
+<img src="documentos/capturas/dashboard-docente.png" alt="Dashboard docente" width="650">
+
+### Gestión de cursos
+
+<img src="documentos/capturas/cursos.png" alt="Gestión de cursos" width="650">
+
+### Detalle del curso y alumnos
+
+<img src="documentos/capturas/detalle-curso.png" alt="Detalle del curso con alumnos" width="650">
+
+### Planilla de asistencia
+
+<img src="documentos/capturas/asistencia.png" alt="Planilla de asistencia" width="650">
+
+### Estadísticas
+
+<img src="documentos/capturas/estadisticas.png" alt="Estadísticas de asistencia" width="650">
+
+### Informe PDF
+
+<img src="documentos/capturas/informe-pdf.png" alt="Informe PDF exportado" width="650">
+
+Las capturas corresponden a pantallas reales de la aplicación desplegada y muestran los principales flujos del sistema: acceso, administración, gestión docente, asistencia y estadísticas.
+
+## Uso de inteligencia artificial
+
+Durante el desarrollo se utilizaron herramientas de inteligencia artificial como apoyo para:
+
+- Analizar y organizar los requisitos.
+- Evaluar alternativas de diseño e implementación.
+- Revisar código y detectar posibles mejoras.
+- Refinar la experiencia de usuario y los mensajes de la interfaz.
+- Elaborar y actualizar documentación técnica y funcional.
+- Preparar casos de prueba y verificar escenarios de uso.
+
+Las decisiones funcionales, la selección de los cambios, las pruebas y la validación final fueron realizadas por la responsable del proyecto. S.I.G.A.D. no requiere servicios de inteligencia artificial para funcionar en producción.
+
+## Seguridad y privacidad
+
+- Las reglas de acceso de PocketBase restringen la información según el usuario autenticado.
+- Un docente no debe acceder a cursos, alumnos o asistencias pertenecientes a otra cuenta.
+- Los comprobantes y datos personales son de acceso administrativo.
+- Los archivos `.env`, bases de datos, copias de seguridad y credenciales no deben publicarse.
+- La aplicación desplegada utiliza conexiones HTTPS.
+
+## Estado actual
+
+El frontend se encuentra publicado en Vercel y conectado al backend desplegado en PocketHost. Las funciones principales de autenticación, administración, cursos, alumnos, asistencias, estadísticas, pagos, solicitudes e informes están implementadas.
+
+Las pruebas manuales recomendadas para la entrega están documentadas en [TESTING.md](TESTING.md).
 
 ## Mejoras futuras
 
-1. Preparar el backend para versionado sin incluir datos privados.
-2. Contratar y configurar un servidor con dominio y HTTPS.
-3. Configurar SMTP para la recuperacion real de contrasenas.
-4. Automatizar copias de seguridad externas.
-5. Incorporar monitoreo, registro de errores y politicas de retencion de archivos.
-6. Ejecutar una prueba integral en el entorno publicado.
-
-La opcion de despliegue prevista es un servidor VPS con el frontend estatico, PocketBase ejecutandose como servicio y un proxy web con HTTPS.
-
-## Compilacion para produccion
-
-```powershell
-npm run build
-```
-
-El resultado se genera en `dist/`. Esta carpeta contiene el frontend estatico, pero PocketBase y su almacenamiento persistente deben desplegarse y configurarse por separado.
-
-## Documentacion del trabajo
-
-El analisis, alcance y especificacion funcional del sistema se encuentran en los documentos academicos asociados al proyecto. Este README resume el estado tecnico y operativo de la aplicacion.
+- Configurar y verificar el envío real de correos mediante SMTP.
+- Automatizar copias de seguridad externas de PocketBase.
+- Incorporar monitoreo y registro centralizado de errores.
+- Realizar pruebas periódicas de restauración de copias de seguridad.
+- Definir políticas formales de conservación y eliminación de datos personales y comprobantes.
+- Optimizar la división del paquete JavaScript para reducir el tamaño de la carga inicial.
+- Ampliar las pruebas automatizadas y de seguridad.
 
 ## Licencia
 
-Proyecto desarrollado con fines academicos y de futura explotacion comercial. No se concede permiso de uso, copia o redistribucion sin autorizacion de su titular.
+Proyecto desarrollado con fines académicos y con proyección de uso comercial. No se autoriza su copia, redistribución o explotación sin permiso de su titular.
