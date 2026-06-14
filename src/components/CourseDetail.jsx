@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 import Swal from 'sweetalert2';
 
-const pb = new PocketBase('http://127.0.0.1:8090');
+const pbUrl = import.meta.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
+const pb = new PocketBase(pbUrl);
 
 const pageStyles = {
   minHeight: '100vh',

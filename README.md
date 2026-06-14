@@ -19,6 +19,16 @@ S.I.G.A.D. centraliza la gestion cotidiana de la asistencia docente y separa cla
 - Antes de eliminar un curso se genera un informe con sus datos.
 - Las personas interesadas pueden solicitar el servicio y consultar publicamente el estado de su solicitud.
 
+## Problema que resuelve
+
+El registro manual o disperso de cursos, alumnos y asistencias dificulta el seguimiento docente, la consulta de estadisticas y la generacion de informes. S.I.G.A.D. concentra esas tareas en una aplicacion accesible desde computadora o celular, con informacion separada por docente y supervision administrativa.
+
+## Usuarios
+
+- **Docente:** administra su perfil, sus pagos y hasta 10 cursos propios con sus alumnos y asistencias.
+- **Administrador:** supervisa todos los cursos, administra docentes y revisa solicitudes y pagos. Tambien puede utilizar sus propios cursos como docente.
+- **Solicitante publico:** conoce los planes, envia una solicitud con comprobante y consulta su estado sin ingresar al panel privado.
+
 ## Funcionalidades principales
 
 ### Gestion docente
@@ -79,6 +89,10 @@ S.I.G.A.D. centraliza la gestion cotidiana de la asistencia docente y separa cla
 - **Informes:** jsPDF y jsPDF AutoTable.
 - **Estilos:** CSS responsivo propio.
 
+## Uso de inteligencia artificial
+
+Se utilizaron herramientas de inteligencia artificial como apoyo durante la ideacion, el analisis de requisitos, la revision de codigo, la mejora de la experiencia de usuario y la preparacion de documentacion. Las decisiones funcionales, las pruebas y la validacion final fueron realizadas por la responsable del proyecto. La aplicacion no depende de un servicio de IA para funcionar en tiempo de ejecucion.
+
 ## Estructura local
 
 El proyecto se ejecuta mediante dos servicios:
@@ -133,6 +147,22 @@ npm run dev
 
 La aplicacion quedara disponible normalmente en `http://localhost:5173`.
 
+### 3. Configurar la direccion de PocketBase
+
+La aplicacion utiliza la variable `VITE_POCKETBASE_URL`. Para desarrollo local se puede copiar `.env.example` como `.env`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Contenido esperado:
+
+```env
+VITE_POCKETBASE_URL=http://127.0.0.1:8090
+```
+
+Si la variable no esta definida, la aplicacion mantiene automaticamente `http://127.0.0.1:8090` como valor local. Para produccion se debe reemplazar por la URL publica con HTTPS antes de compilar.
+
 ## Comandos disponibles
 
 ```powershell
@@ -164,13 +194,17 @@ npm run preview  # Previsualiza localmente la compilacion
 
 ## Estado del proyecto
 
-La experiencia funcional y visual principal esta implementada. Antes del despliegue publico quedan estas tareas de infraestructura:
+La experiencia funcional y visual principal esta implementada. Actualmente estan disponibles autenticacion, perfiles, administracion de docentes, cursos, alumnos, asistencias P/A/T, estadisticas, informes PDF, planes, pagos, solicitudes publicas y consulta de estado.
 
-1. Reemplazar la direccion local fija de PocketBase por una variable de entorno.
-2. Preparar el backend para versionado sin incluir datos privados.
-3. Contratar y configurar un servidor con dominio y HTTPS.
-4. Configurar SMTP para la recuperacion real de contrasenas.
-5. Automatizar copias de seguridad externas.
+La lista de comprobaciones para la entrega se encuentra en [TESTING.md](TESTING.md). Los pendientes academicos y las mejoras posteriores estan separados en el archivo `PENDIENTES.md` de la carpeta principal del proyecto.
+
+## Mejoras futuras
+
+1. Preparar el backend para versionado sin incluir datos privados.
+2. Contratar y configurar un servidor con dominio y HTTPS.
+3. Configurar SMTP para la recuperacion real de contrasenas.
+4. Automatizar copias de seguridad externas.
+5. Incorporar monitoreo, registro de errores y politicas de retencion de archivos.
 6. Ejecutar una prueba integral en el entorno publicado.
 
 La opcion de despliegue prevista es un servidor VPS con el frontend estatico, PocketBase ejecutandose como servicio y un proxy web con HTTPS.
