@@ -667,8 +667,8 @@ function AttendanceSheet({ logout }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '32px', alignItems: 'center', marginTop: '16px', width: '100%', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="attendance-toolbar" style={{ display: 'flex', gap: '32px', alignItems: 'center', marginTop: '16px', width: '100%', flexWrap: 'wrap' }}>
+          <div className="attendance-month-control" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <label style={{ color: '#d7dcff', fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
               Mes:
             </label>
@@ -680,7 +680,7 @@ function AttendanceSheet({ logout }) {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '14px', marginLeft: 'auto' }}>
+          <div className="attendance-actions" style={{ display: 'flex', gap: '14px', marginLeft: 'auto' }}>
             <button
               style={actionButtonStyles}
               type="button"
@@ -718,7 +718,7 @@ function AttendanceSheet({ logout }) {
           </div>
         </div>
 
-        <div style={{ ...summaryStyles, marginTop: '16px' }}>
+        <div className="attendance-summary" style={{ ...summaryStyles, marginTop: '16px' }}>
           <div style={summaryItemStyles}>
             <span style={summaryLabelStyles}>Alumnos</span>
             <span style={summaryValueStyles}>{alumnos.length}</span>

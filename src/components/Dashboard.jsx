@@ -424,7 +424,7 @@ function Dashboard({ pb, logout }) {
         {showCourseInput && (
           <section style={sectionCardStyles}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 0.8fr', gap: '16px' }}>
+              <div className="course-form-grid course-form-grid-main" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 0.8fr', gap: '16px' }}>
                 <div>
                   <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
                     Nombre del curso
@@ -465,7 +465,7 @@ function Dashboard({ pb, logout }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
+              <div className="course-form-grid course-form-grid-details" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <p style={{ margin: '0 0 8px', color: '#d7dcff', fontSize: '0.9rem', fontWeight: 600 }}>
                     Descripción (opcional)

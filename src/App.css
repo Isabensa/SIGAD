@@ -482,6 +482,8 @@ main > section[style*="max-width: 440px"] button { min-height: 44px; border-radi
 .app-page input,
 .app-page select,
 .app-page textarea {
+  box-sizing: border-box;
+  max-width: 100%;
   min-height: 44px;
   border-radius: 12px !important;
   border-color: rgba(255, 255, 255, 0.13) !important;
@@ -523,6 +525,41 @@ main > section[style*="max-width: 440px"] button { min-height: 44px; border-radi
 }
 
 @media (max-width: 720px) {
+  .app-page {
+    align-items: stretch !important;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  .app-page *,
+  .auth-page * {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .app-page > section,
+  .app-page > .app-shell,
+  .app-page > div {
+    max-width: 100% !important;
+  }
+
+  .app-page > div {
+    padding: 18px !important;
+  }
+
+  .app-page input,
+  .app-page select,
+  .app-page textarea,
+  .auth-page input {
+    display: block;
+    width: 100% !important;
+  }
+
+  .course-form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+  }
+
   .profile-summary { grid-template-columns: 1fr; }
 
   .subscription-expiry-notice {
@@ -569,16 +606,62 @@ main > section[style*="max-width: 440px"] button { min-height: 44px; border-radi
   .attendance-course-info { flex-direction: column; }
   .attendance-desktop { display: none !important; }
 
+  .attendance-toolbar,
+  .attendance-month-control,
+  .attendance-actions {
+    align-items: stretch !important;
+    width: 100%;
+  }
+
+  .attendance-toolbar {
+    flex-direction: column;
+    gap: 14px !important;
+  }
+
+  .attendance-month-control {
+    align-items: center !important;
+  }
+
+  .attendance-month-control input { flex: 1; }
+
+  .attendance-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 0 !important;
+  }
+
+  .attendance-actions button {
+    min-width: 0;
+    padding-inline: 10px !important;
+    width: 100%;
+  }
+
+  .attendance-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
   .attendance-mobile {
-    display: grid;
+    display: flex;
     gap: 14px;
+    margin-inline: -4px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: 0 4px 12px;
+    scroll-padding-inline: 4px;
+    scroll-snap-type: inline mandatory;
+    scrollbar-color: rgba(167, 139, 250, 0.7) rgba(255, 255, 255, 0.06);
+    scrollbar-width: thin;
   }
 
   .attendance-student-card {
+    flex: 0 0 min(88vw, 370px);
+    max-width: 100%;
     padding: 15px;
     border-radius: 17px;
     background: rgba(18, 24, 51, 0.7);
     border: 1px solid rgba(255, 182, 193, 0.14);
+    scroll-snap-align: start;
   }
 
   .attendance-student-card header {
