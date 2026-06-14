@@ -48,6 +48,7 @@ El proyecto también contempla un modelo de servicio comercial: cada docente pue
 - Gestión de cursos propios con un límite de diez por docente.
 - Alta, edición y eliminación de alumnos.
 - Registro de asistencia como Presente, Ausente o Tardanza.
+- Guardado por lote de asistencias mediante una operación transaccional.
 - Consulta de estadísticas de asistencia.
 - Exportación de planillas e informes en formato PDF.
 - Generación de un informe antes de eliminar un curso.
@@ -56,6 +57,7 @@ El proyecto también contempla un modelo de servicio comercial: cada docente pue
 - Consulta pública del estado de una solicitud.
 - Avisos anticipados de vencimiento.
 - Interfaz adaptable a computadoras y teléfonos celulares.
+- Alertas y confirmaciones integradas con el estilo visual del sistema.
 
 ## Tecnologías utilizadas
 
@@ -74,6 +76,8 @@ El proyecto también contempla un modelo de servicio comercial: cada docente pue
 El frontend es una aplicación SPA desarrollada con React y publicada en Vercel. Las rutas internas son redirigidas a `index.html` mediante `vercel.json`, lo que permite recargar pantallas como `/dashboard` sin obtener errores 404.
 
 El backend está implementado con PocketBase y desplegado en PocketHost. La dirección del servicio se configura mediante la variable de entorno `VITE_POCKETBASE_URL`.
+
+El guardado de asistencias utiliza el endpoint personalizado `POST /api/sigad/courses/{id}/attendance/batch`, definido en `pocketbase/pb_hooks/main.pb.js`. Este endpoint valida que el usuario sea administrador o propietario del curso, comprueba la pertenencia de los alumnos y procesa el lote dentro de una transacción.
 
 Colecciones principales:
 
@@ -114,6 +118,8 @@ npm run dev
 ```
 
 La aplicación estará disponible normalmente en `http://localhost:5173`.
+
+Para probar el guardado batch con una instancia local de PocketBase, el archivo versionado `pocketbase/pb_hooks/main.pb.js` debe copiarse o desplegarse en la carpeta `pb_hooks` de dicha instancia antes de iniciarla. El frontend y el hook deben corresponder a la misma versión.
 
 El archivo `.env` contiene configuración local y no debe incorporarse al repositorio. El proyecto incluye `.env.example` como referencia, sin credenciales privadas.
 
@@ -174,6 +180,8 @@ npm run preview  # Previsualiza la compilación
 
 Las capturas corresponden a pantallas reales de la aplicación desplegada y muestran los principales flujos del sistema: acceso, administración, gestión docente, asistencia y estadísticas.
 
+Las imágenes se encuentran versionadas en `documentos/capturas/`. La animación suave de la imagen principal, los estados hover y las transiciones de la interfaz deben observarse directamente en la aplicación, ya que no pueden representarse en una captura estática.
+
 ## Uso de inteligencia artificial
 
 Durante el desarrollo se utilizaron herramientas de inteligencia artificial como apoyo para:
@@ -191,6 +199,8 @@ Las decisiones funcionales, la selección de los cambios, las pruebas y la valid
 
 - Las reglas de acceso de PocketBase restringen la información según el usuario autenticado.
 - Un docente no debe acceder a cursos, alumnos o asistencias pertenecientes a otra cuenta.
+- El endpoint batch comprueba nuevamente los permisos y la pertenencia de cada alumno antes de guardar.
+- Las operaciones batch se ejecutan mediante una transacción para evitar actualizaciones parciales.
 - Los comprobantes y datos personales son de acceso administrativo.
 - Los archivos `.env`, bases de datos, copias de seguridad y credenciales no deben publicarse.
 - La aplicación desplegada utiliza conexiones HTTPS.
@@ -198,6 +208,8 @@ Las decisiones funcionales, la selección de los cambios, las pruebas y la valid
 ## Estado actual
 
 El frontend se encuentra publicado en Vercel y conectado al backend desplegado en PocketHost. Las funciones principales de autenticación, administración, cursos, alumnos, asistencias, estadísticas, pagos, solicitudes e informes están implementadas.
+
+La versión preparada localmente incorpora guardado batch de asistencias, protección de rutas de cursos ajenos, alertas visuales compactas, mejoras de interacción en botones y movimiento suave en la imagen principal. Para llevar estas mejoras a producción deben desplegarse juntos el frontend y el hook de PocketBase.
 
 Las pruebas manuales recomendadas para la entrega están documentadas en [TESTING.md](TESTING.md).
 
@@ -210,6 +222,7 @@ Las pruebas manuales recomendadas para la entrega están documentadas en [TESTIN
 - Definir políticas formales de conservación y eliminación de datos personales y comprobantes.
 - Optimizar la división del paquete JavaScript para reducir el tamaño de la carga inicial.
 - Ampliar las pruebas automatizadas y de seguridad.
+- Incorporar monitoreo de rendimiento del endpoint batch con cursos de mayor volumen.
 
 ## Licencia
 

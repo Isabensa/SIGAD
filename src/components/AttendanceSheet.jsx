@@ -394,12 +394,6 @@ function AttendanceSheet({ logout }) {
     }
   };
 
-  const getNextDateISO = (fechaISO) => {
-    const fecha = new Date(`${fechaISO}T00:00:00`);
-    fecha.setDate(fecha.getDate() + 1);
-    return fecha.toISOString().slice(0, 10);
-  };
-
   const estadoParaPocketBase = {
     presente: 'Presente',
     ausente: 'Ausente',
@@ -433,42 +427,23 @@ function AttendanceSheet({ logout }) {
 
     try {
       setSaving(true);
-      // Procesar cada asistencia (crear o actualizar)
-      for (const asistencia of asistenciasAGuardar) {
-        const estadoConvertido = estadoParaPocketBase[asistencia.estado];
+      const asistenciasNormalizadas = asistenciasAGuardar
+        .map((asistencia) => ({
+          alumnoId: asistencia.alumnoId,
+          fecha: asistencia.fecha,
+          estado: estadoParaPocketBase[asistencia.estado]
+        }))
+        .filter((asistencia) => asistencia.estado);
 
-        // Validar que el estado exista en PocketBase
-        if (!estadoConvertido) {
-          continue;
-        }
+      const resultado = await pb.send(`/api/sigad/courses/${id}/attendance/batch`, {
+        method: 'POST',
+        body: { asistencias: asistenciasNormalizadas },
+        requestKey: null
+      });
 
-        // Buscar si ya existe un registro para este alumno/fecha/curso
-        // Usar rango de fecha para evitar problemas con hora interna
-        const siguienteFecha = getNextDateISO(asistencia.fecha);
-        const existentes = await pb.collection('asistencias').getFullList({
-          filter: `cursoId = "${id}" && alumnoId = "${asistencia.alumnoId}" && fecha >= "${asistencia.fecha}" && fecha < "${siguienteFecha}"`,
-          requestKey: null
-        });
-
-        if (existentes.length > 0) {
-          // Actualizar registro existente
-          await pb.collection('asistencias').update(existentes[0].id, {
-            estado: estadoConvertido
-          }, { requestKey: null });
-        } else {
-          // Crear registro nuevo
-          await pb.collection('asistencias').create({
-            cursoId: id,
-            alumnoId: asistencia.alumnoId,
-            fecha: asistencia.fecha,
-            estado: estadoConvertido
-          }, { requestKey: null });
-        }
-      }
-
-      await Swal.fire('Asistencias guardadas', `Se guardaron ${asistenciasAGuardar.length} registros correctamente.`, 'success');
+      await Swal.fire('Asistencias guardadas', `Se guardaron ${resultado.saved} registros correctamente.`, 'success');
     } catch (error) {
-      await Swal.fire('No se pudieron guardar las asistencias', error?.response?.message || 'Algunos registros pueden no haberse guardado. Revisa la conexión e intenta nuevamente.', 'error');
+      await Swal.fire('No se pudieron guardar las asistencias', error?.response?.message || 'No se realizó ningún cambio. Revisa la conexión e intenta nuevamente.', 'error');
     } finally {
       setSaving(false);
     }
@@ -490,6 +465,7 @@ function AttendanceSheet({ logout }) {
         setAlumnos(alumnosList);
       } catch (error) {
         await Swal.fire('No se pudo cargar la planilla', error?.response?.message || 'El curso no está disponible o no tienes acceso.', 'error');
+        navigate('/dashboard', { replace: true });
       } finally {
         setLoading(false);
       }
@@ -498,7 +474,7 @@ function AttendanceSheet({ logout }) {
     if (id) {
       loadData();
     }
-  }, [id]);
+  }, [id, navigate]);
 
   // Cargar asistencias existentes cuando cambien id, alumnos o mes
   useEffect(() => {

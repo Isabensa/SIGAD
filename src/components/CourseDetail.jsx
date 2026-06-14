@@ -187,7 +187,10 @@ function CourseDetail({ logout }) {
         setDiasClase(normalizeDiasClase(courseData?.diasClase));
         setAlumnos(alumnosList);
       } catch (error) {
-        if (mounted) await Swal.fire('No se pudo abrir el curso', error?.response?.message || 'El curso no está disponible o no tienes acceso.', 'error');
+        if (mounted) {
+          await Swal.fire('No se pudo abrir el curso', error?.response?.message || 'El curso no está disponible o no tienes acceso.', 'error');
+          navigate('/dashboard', { replace: true });
+        }
       } finally {
         if (mounted) setLoading(false);
       }
